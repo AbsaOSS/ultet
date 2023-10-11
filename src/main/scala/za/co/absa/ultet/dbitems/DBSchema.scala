@@ -16,12 +16,12 @@
 
 package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.model.SQLEntry
+import za.co.absa.ultet.model.{SQLEntry, SchemaName, UserName}
 import za.co.absa.ultet.model.schema.{SchemaCreate, SchemaGrant, SchemaOwner}
 
-case class DBSchema(name: String,
-                    ownerName: String,
-                    users: Seq[String]) extends DBItem {
+case class DBSchema(name: SchemaName,
+                    ownerName: UserName,
+                    users: Seq[UserName]) extends DBItem {
   override def sqlEntries: Seq[SQLEntry] = {
     Seq(
       SchemaCreate(name),
