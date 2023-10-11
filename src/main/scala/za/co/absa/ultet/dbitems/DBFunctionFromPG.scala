@@ -17,7 +17,7 @@ package za.co.absa.ultet.dbitems
 
 
 import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionDrop, FunctionName}
-import za.co.absa.ultet.model.{DatabaseName, SQLEntry, SchemaName}
+import za.co.absa.ultet.model.{SQLEntry, SchemaName}
 
 import java.sql.Connection
 
@@ -31,8 +31,8 @@ case class DBFunctionFromPG(
 
 object DBFunctionFromPG {
 
-  def fetchAll(schemaName: SchemaName)
-              (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
+  def fetchAllOfSchema(schemaName: SchemaName)
+                      (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
     val query =
       s"""
          |SELECT
@@ -40,18 +40,41 @@ object DBFunctionFromPG {
          |  pg_catalog.pg_get_function_arguments(p.oid) AS in_and_out_arguments
          |FROM
          |  pg_catalog.pg_namespace n JOIN
-         |  pg_catalog.pg_proc p ON p.pronamespace = n.oid JOIN
-         |  pg_catalog.pg_type T ON p.prorettype = T.oid
+         |  pg_catalog.pg_proc p ON p.pronamespace = n.oid
          |WHERE
          |  n.nspname = '${schemaName.value}' AND
-         |  p.prokind = 'f'
-         |ORDER BY n.nspname, p.proname;
+         |  p.prokind = 'f';
          |""".stripMargin
+
+    fetchAllOfSchemaWithQuery(schemaName, query)
+  }
+
+  def fetchAllOverloads(schemaName: SchemaName, functionName: FunctionName)
+                      (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
+    val query =
+      s"""
+         |SELECT
+         |  p.proname AS fn_name,
+         |  pg_catalog.pg_get_function_arguments(p.oid) AS in_and_out_arguments
+         |FROM
+         |  pg_catalog.pg_namespace n JOIN
+         |  pg_catalog.pg_proc p ON p.pronamespace = n.oid
+         |WHERE
+         |  n.nspname = '${schemaName.value}' AND
+         |  p.proname = '${functionName.value}' AND
+         |  p.prokind = 'f';
+         |""".stripMargin
+
+    fetchAllOfSchemaWithQuery(schemaName, query)
+  }
+
+  private def fetchAllOfSchemaWithQuery(schemaName: SchemaName, query: String)
+                                       (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
     val preparedStatement = jdbcConnection.prepareStatement(query)
     val result = preparedStatement.executeQuery()
     val seqBuilder = Seq.newBuilder[DBFunctionFromPG]
 
-    while(result.next()) {
+    while (result.next()) {
       val fnName = result.getString("fn_name")
       val inAndOutArguments = result.getString("in_and_out_arguments")
       val inArguments = inAndOutArguments
