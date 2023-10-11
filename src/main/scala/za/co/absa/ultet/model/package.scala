@@ -24,4 +24,6 @@ package object model {
 
   case class UserName(value: String) extends AnyVal
 
+  case class ColumnName(value: String) extends AnyVal
+
 }

@@ -16,6 +16,8 @@
 
 package za.co.absa.ultet.dbitems
 
+import za.co.absa.ultet.model.ColumnName
+
 trait DBTableMember
 
 object DBTableMember {
@@ -24,7 +26,7 @@ object DBTableMember {
                            tableName: String,
                            indexBy: Seq[String],
                            unique: Boolean = false,
-                           ascending: Boolean = true,
+                           ascendingOrder: Boolean = true,
                            nullsFirstOverride: Option[Boolean] = None,
                            nullsDistinct: Boolean = true
                          )
@@ -32,19 +34,19 @@ object DBTableMember {
 
 
     def nullsFirst: Boolean = {
-      nullsFirstOverride.getOrElse(!ascending)
+      nullsFirstOverride.getOrElse(!ascendingOrder)
     }
 
   }
 
   case class DBTablePrimaryKey (
-                                 columns: Seq[String],
+                                 columns: Seq[ColumnName],
                                  name: Option[String] = None
                                )
     extends DBTableMember
 
   class DBTableColumn(
-                       columnName: String,
+                       columnName: ColumnName,
                        dataType: String,
                        notNull: Boolean,
                        description: Option[String] = None,

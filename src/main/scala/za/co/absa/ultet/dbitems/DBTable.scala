@@ -17,13 +17,15 @@
 package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.dbitems.DBTableMember._
+import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 
 //TODO checks on validity of entries
 case class DBTable(
                    tableName: String,
+                   schemaName: SchemaName,
                    description: Option[String],
-                   primaryDBName: String,
-                   owner: String,
+                   primaryDBName: DatabaseName,
+                   owner: UserName,
                    columns: Seq[DBTableColumn] = Seq.empty,
                    primaryKey: Option[DBTablePrimaryKey] = None,
                    indexes: Seq[DBTableIndex] = Seq.empty
