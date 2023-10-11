@@ -16,15 +16,9 @@
 
 package za.co.absa.ultet.model
 
+object TransactionGroup extends Enumeration {
 
-sealed abstract class TransactionGroup
+  final type TransactionGroup = Value
 
-object TransactionGroup {
-  final case object Database      extends TransactionGroup
-  final case object Role          extends TransactionGroup
-  final case object Schema        extends TransactionGroup
-  final case object Function      extends TransactionGroup
-  final case object Table         extends TransactionGroup
-  final case object AdditionalSQL extends TransactionGroup
-  final case object Index         extends TransactionGroup
+  final val Databases, Roles, Objects, Indexes = Value // objects here represent schemas, tables, functions
 }
