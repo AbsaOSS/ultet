@@ -15,10 +15,25 @@
  */
 package za.co.absa.ultet.model.function
 
-case class FunctionOwnership() extends FunctionEntry {
-  override def sqlExpression: String = ???
+import za.co.absa.ultet.model.{SchemaName, UserName}
+import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
-  override def transactionGroup: String = ???
+case class FunctionOwnership(
+                              schemaName: SchemaName,
+                              functionName: FunctionName,
+                              arguments: Seq[FunctionArgumentType],
+                              newOwner: UserName
+                            ) extends FunctionEntry {
+  override def sqlExpression: String = {
+    val argumentsString = arguments.map(_.value).mkString(",")
+    s"""ALTER FUNCTION
+       |  ${schemaName.value}.${functionName.value}($argumentsString)
+       |OWNER TO
+       |  ${newOwner.value};
+       |""".stripMargin
+  }
 
-  override def order: Int = ???
+  override def transactionGroup: TransactionGroup = ???
+
+  override def orderInTransaction: Int = 102
 }

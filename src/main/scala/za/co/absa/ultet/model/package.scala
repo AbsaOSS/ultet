@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 ABSA Group Limited
+ * Copyright 2023 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,14 @@
  * limitations under the License.
  */
 
-import Dependencies._
+package za.co.absa.ultet
 
-ThisBuild / organization := "za.co.absa.ultet"
+package object model {
 
-lazy val scala212 = "2.12.17"
+  case class DatabaseName(value: String) extends AnyVal
 
-ThisBuild / scalaVersion := scala212
+  case class SchemaName(value: String) extends AnyVal
 
-lazy val ultet = (project in file("."))
-  .settings(
-    name := "ultet",
-    libraryDependencies ++= coreDependencies,
-    publish / skip := true,
-    assembly / mainClass := Some("za.co.absa.ultet.Ultet")
-  )
+  case class UserName(value: String) extends AnyVal
+
+}

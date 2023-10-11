@@ -17,6 +17,4 @@ package za.co.absa.ultet.model.function
 
 import za.co.absa.ultet.model.SQLEntry
 
-trait FunctionEntry extends SQLEntry {
-
-}
+trait FunctionEntry extends SQLEntry
