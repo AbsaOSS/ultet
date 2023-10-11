@@ -13,12 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
+package za.co.absa.ultet.dbitems
 
-case class FunctionOwnership(owner: String) extends FunctionEntry {
-  override def sqlExpression: String = ???
+import za.co.absa.ultet.model.SQLEntry
 
-  override def transactionGroup: String = ???
+case class DBFunctionFromPG(sqlEntries: Seq[SQLEntry]) extends DBFunction {
+  override def fnName: String = ???
 
-  override def order: Int = ???
+  override def paramTypes: Seq[String] = ???
+
+  override def owner: String = ???
+
+  override def users: Seq[String] = ???
+
+  override def schema: String = ???
+
+  override def database: String = ???
 }

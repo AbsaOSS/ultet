@@ -13,18 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
+package za.co.absa.ultet.dbitems
 
-case class FunctionGrant(
-  schema: String,
+import za.co.absa.ultet.model.SQLEntry
+import za.co.absa.ultet.model.function.{FunctionBody, FunctionOwnership, FunctionGrant}
+
+case class DBFunctionFromSource(
   fnName: String,
   paramTypes: Seq[String],
-  user:String,
+  owner: String,
+  users: Seq[String],
+  schema: String,
+  database: String,
+  sqlBody: String
+) extends DBFunction {
+  override def sqlEntries: Seq[SQLEntry] = {
+    Seq(FunctionBody(sqlBody)) ++
+    users.map { user =>
+      // e.g. GRANT EXECUTE ON FUNCTION schema.fnName(UUID, TEXT, INTEGER, JSONB, JSONB) TO user;
+      FunctionGrant(schema, fnName, paramTypes, user)
+    } ++
+    Seq(FunctionOwnership(owner))
+  }
 
-) extends FunctionEntry {
-  override def sqlExpression: String = ???
-
-  override def transactionGroup: String = ???
-
-  override def order: Int = ???
 }
