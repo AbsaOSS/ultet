@@ -15,12 +15,13 @@
  */
 package za.co.absa.ultet.model.table
 
+import za.co.absa.ultet.model.TransactionGroup
 import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
-case class TableOwnership() extends TableEntry {
+case class TableOwnership(owner: String) extends TableEntry {
   override def sqlExpression: String = ???
 
-  override def transactionGroup: TransactionGroup = ???
+  override def transactionGroup: TransactionGroup = TransactionGroup.Roles
 
   override def orderInTransaction: Int = ???
 }
