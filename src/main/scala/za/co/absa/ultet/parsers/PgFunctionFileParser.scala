@@ -45,13 +45,14 @@ case class PgFunctionFileParser() {
       case Nil => throw new IllegalStateException(s"Could not parse database or users from $str")
       case line :: Nil => {
         val dbName = line.group(1)
-        val unparsedUsers = line.group(2)
-        val trimmedUsers = unparsedUsers.split(',').map(_.trim).filter(_.nonEmpty)
-        if (trimmedUsers.isEmpty) {
-          throw new IllegalStateException(s"Could not parse users name from $str")
-        } else {
-          (dbName, trimmedUsers)
+        // there may be no users at all, so the group #2 may not exist
+        val trimmedUsers = Option(line.group(2)) match {
+          case None => Seq.empty
+          case Some(unparsedUsers) =>
+            unparsedUsers.split(',').map(_.trim).filter(_.nonEmpty).toSeq
         }
+
+        (dbName, trimmedUsers)
       }
       case _ => throw new IllegalStateException(s"Found more than 2 database records in $str")
     }
@@ -82,11 +83,35 @@ case class PgFunctionFileParser() {
 }
 
 object PgFunctionFileParser {
+  val ownerRx = """--\s*owner:\s*(\w+)\s*""".r
+  //                              1--1
+  // 1 - capturing group for owner
 
-  val ownerRx = """--\s*owner:\s*([_a-zA-Z0-9]+)\s*""".r
-  val dbUsersRx = """--\s*database:\s*([_a-zA-Z0-9]+)\s*\((\s*(?:[_a-zA-Z0-9]+)\s*(?:,\s*[_a-zA-Z0-9]+\s*)*\s*)\)""".r // need to ,-break and trim the users
-  val schemaFnParamsRx = """(?i)CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+([_a-zA-Z0-9]+)\.([_a-zA-Z0-9]+)\s*\(([,\s_a-zA-Z0-9]+)\)""".r // need to break params
+  val dbUsersRx = """--\s*database:\s*(\w+)\s*\(\s*((?:\w+)\s*(?:,\s*\w+\s*)*\s*)?\)""".r // need to ,-break and trim the users
+  //                                  1---1   2    34-----4   5------------5    6 7
+  // 1 - capturing group #1 for db-name
+  // 2,7 verbatim "()" in which users are written
+  // 3,6 - capturing group #2 for list of users. Made optional by the ? (above "6")
+  // 4 - non-capturing group for the first user
+  // 5 - other users - comma separated from the first user
 
-  val singleParamCapturingRx = """(?i)\s*(IN|OUT)\s+([_a-zA-Z0-9]+)\s+([_a-zA-Z0-9]+)\s*""".r // used to break up params from ^^
+
+  val schemaFnParamsRx = """(?i)CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(\w+)\.(\w+)\s*\(([,\s\w]+)\)""".r // need to break params
+  //                        1--1       2-----------------2              3---3 45---5    6 7-------7 8
+  // 1 - case insensitive matching
+  // 2 - non-capturing group of optinally present " OR REPLACE"
+  // 3 - capturing-group #1 schema name
+  // 4 - verbatim "." separates schema from fnName
+  // 5 - capturing-group #2
+  // 6,8 - verbatim "()" in which paramters are written
+  // 7 - capturing-group #3 - parameters are matched there as a block - \s also covers line-breaks => parsed further later
+
+
+  val singleParamCapturingRx = """(?i)\s*(IN|OUT)\s+(\w+)\s+(\w+)\s*""".r // used to break up params from ^^
+  //                              1--1   2------2   3---3   4---4
+  // 1 - case insensitive matching
+  // 2 - capturing-group #1 IN/OUT param
+  // 3 - capturing-group #2 for param name
+  // 4 - capturing-group #3 for param type
 
 }

@@ -39,6 +39,34 @@ class PgFunctionFileParserTest extends AnyFlatSpec with Matchers {
 
   }
 
+  it should "parse function from another content (empty users, no IN params)" in {
+    val functionString =
+      """/* comment here and there **/
+        |-- owner:
+        |     owner_user123
+        |-- database: eXample_db (   )
+        |CREATE or REPLACE FUNCTION my_schema1.public_functionX(
+        |    OUT status              INTEGER,
+        |    OUT status_text         TEXT
+        |) RETURNS record AS
+        |$$
+        |-------------------------------------------------------------------------------
+        |--
+        |-- Function: my_schema.public_function([Function_Param_Count])
+        |--      [Descrip""".stripMargin
+
+    PgFunctionFileParser().parseString(functionString) shouldBe DBFunctionFromSource(
+      fnName = "public_functionX",
+      paramTypes = Seq.empty,
+      owner = "owner_user123",
+      users = Seq.empty,
+      schema = "my_schema1",
+      database = "eXample_db",
+      sqlBody = functionString // the whole thing
+    )
+
+  }
+
   it should "parse example function example file" in {
    val testFileUri = getClass().getClassLoader().getResource("public_function_example.sql").toURI
 
