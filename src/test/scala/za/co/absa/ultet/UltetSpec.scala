@@ -14,10 +14,25 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.dbitems
+import collection.mutable.Stack
+import org.scalatest._
+import flatspec._
+import matchers._
 
-import za.co.absa.ultet.model.SQLEntry
+class UltetSpec extends AnyFlatSpec with should.Matchers {
 
-trait DBItem {
-  def sqlEntry: Seq[SQLEntry]
+  "A Stack" should "pop values in last-in-first-out order" in {
+    val stack = new Stack[Int]
+    stack.push(1)
+    stack.push(2)
+    stack.pop() should be (2)
+    stack.pop() should be (1)
+  }
+
+  it should "throw NoSuchElementException if an empty stack is popped" in {
+    val emptyStack = new Stack[Int]
+    a [NoSuchElementException] should be thrownBy {
+      emptyStack.pop()
+    }
+  }
 }
