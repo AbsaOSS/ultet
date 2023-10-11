@@ -16,7 +16,6 @@
 package za.co.absa.ultet.model.function
 
 import za.co.absa.ultet.model.{SchemaName, UserName}
-import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
 case class FunctionGrant(
                           schemaName: SchemaName,
@@ -32,8 +31,6 @@ case class FunctionGrant(
        |  ${userToGrantExecuteTo.value};
        |""".stripMargin
   }
-
-  override def transactionGroup: TransactionGroup = ???
 
   override def orderInTransaction: Int = 103
 }

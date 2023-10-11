@@ -13,12 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
+package za.co.absa.ultet.model.table
 
-import za.co.absa.ultet.model.SQLEntry
-import za.co.absa.ultet.model.TransactionGroup
+import za.co.absa.ultet.model.{SchemaName, UserName}
 
-trait FunctionEntry extends SQLEntry {
-  override def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
+case class TableOwnership(
+  schemaName: SchemaName,
+  tableName: TableName,
+  owner: UserName
+) extends TableAlteration {
 
+  override def sqlExpression: String = {
+    s"""ALTER TABLE ${schemaName.value}.${tableName.value} OWNER TO ${owner.value};"""
+  }
+
+  override def orderInTransaction: Int = 201
 }

@@ -13,12 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
 
-import za.co.absa.ultet.model.SQLEntry
-import za.co.absa.ultet.model.TransactionGroup
+package za.co.absa.ultet.model
 
-trait FunctionEntry extends SQLEntry {
-  override def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
+package object table {
+
+  case class TableName(value: String) extends AnyVal
 
 }
