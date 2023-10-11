@@ -16,6 +16,7 @@
 package za.co.absa.ultet.parsers
 
 import za.co.absa.ultet.dbitems.DBFunctionFromSource
+import za.co.absa.ultet.parsers.PgFunctionFileParser._
 
 import java.net.URI
 import java.nio.file.{Files, Paths}
@@ -32,17 +33,17 @@ case class PgFunctionFileParser() {
     parseString(content)
   }
 
-  def parseString(str: String): DBFunctionFromSource = {
-    import PgFunctionFileParser._
-
-    val owner = ownerRx.findAllMatchIn(str).toList match {
-      case Nil => throw new IllegalStateException(s"Could not parse owner from $str")
+  private def parseOwnerFromSql(sqlStr: String): String = {
+    ownerRx.findAllMatchIn(sqlStr).toList match {
+      case Nil => throw new IllegalStateException(s"Could not parse owner from $sqlStr")
       case o :: Nil => o.group(1)
-      case _ => throw new IllegalStateException(s"Found more than 2 owners in $str")
+      case _ => throw new IllegalStateException(s"Found more than 2 owners in $sqlStr")
     }
+  }
 
-    val (databaseName, users) = dbUsersRx.findAllMatchIn(str).toList match {
-      case Nil => throw new IllegalStateException(s"Could not parse database or users from $str")
+  private def parseDatabaseNameAndUsersFromSql(sqlStr: String): (String, Seq[String]) = {
+    dbUsersRx.findAllMatchIn(sqlStr).toList match {
+      case Nil => throw new IllegalStateException(s"Could not parse database or users from $sqlStr")
       case line :: Nil => {
         val dbName = line.group(1)
         // there may be no users at all, so the group #2 may not exist
@@ -54,29 +55,36 @@ case class PgFunctionFileParser() {
 
         (dbName, trimmedUsers)
       }
-      case _ => throw new IllegalStateException(s"Found more than 2 database records in $str")
+      case _ => throw new IllegalStateException(s"Found more than 2 database records in $sqlStr")
     }
+  }
 
-    val (schemaName, fnName, inParamTypes) = schemaFnParamsRx.findAllMatchIn(str).toList match {
-      case Nil => throw new IllegalStateException(s"Could not parse schemaName, fn name or params from $str")
+  private def parseSchemaNameFnNameAndInParamTypesFromSql(sqlStr: String): (String, String, Seq[String]) = {
+    schemaFnParamsRx.findAllMatchIn(sqlStr).toList match {
+      case Nil => throw new IllegalStateException(s"Could not parse schemaName, fn name or params from $sqlStr")
       case line :: Nil => {
         val schema = line.group(1)
         val fn = line.group(2)
         val paramsStr = line.group(3)
 
         val paramsUnparsed = paramsStr.split(',').map(_.trim).toSeq
-        val optParamTypes: Seq[Option[String]] = paramsUnparsed.map { param =>
-          param match {
-            case singleParamCapturingRx(inOut, _, paramType) =>
-              if (inOut.toUpperCase == "IN") Some(paramType) else None
+        val optParamTypes: Seq[Option[String]] = paramsUnparsed.map {
+          case singleParamCapturingRx(inOut, _, paramType) =>
+            if (inOut.toUpperCase == "IN") Some(paramType) else None
 
-            case _ => throw new IllegalStateException(s"Could not parameter from $param")
-          }
+          case param => throw new IllegalStateException(s"Could not parameter from $param")
         }
+
         (schema, fn, optParamTypes.flatten) // just keep the IN paramTypes
       }
-      case _ => throw new IllegalStateException(s"Found more than 2 create function mentions in $str")
+      case _ => throw new IllegalStateException(s"Found more than 2 create function mentions in $sqlStr")
     }
+  }
+
+  def parseString(str: String): DBFunctionFromSource = {
+    val owner = parseOwnerFromSql(str)
+    val (databaseName, users) = parseDatabaseNameAndUsersFromSql(str)
+    val (schemaName, fnName, inParamTypes) = parseSchemaNameFnNameAndInParamTypesFromSql(str)
 
     DBFunctionFromSource(fnName, inParamTypes, owner, users, schemaName, databaseName, str)
   }
