@@ -30,7 +30,6 @@ object DBTableMember {
                          )
     extends DBTableMember {
 
-    if (indexBy.map(_.toLowerCase).distinct.length
 
     def nullsFirst: Boolean = {
       nullsFirstOverride.getOrElse(!ascending)
