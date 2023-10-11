@@ -20,12 +20,13 @@ import za.co.absa.ultet.model.{SchemaName, UserName}
 case class FunctionOwnership(
                               schemaName: SchemaName,
                               functionName: FunctionName,
-                              arguments: FunctionArguments,
+                              arguments: Seq[FunctionArgumentType],
                               newOwner: UserName
                             ) extends FunctionEntry {
   override def sqlExpression: String = {
+    val argumentsString = arguments.map(_.value).mkString(",")
     s"""ALTER FUNCTION
-       |  ${schemaName.value}.${functionName.value}($argumentTypesListAsString)
+       |  ${schemaName.value}.${functionName.value}($argumentsString)
        |OWNER TO
        |  ${newOwner.value};
        |""".stripMargin

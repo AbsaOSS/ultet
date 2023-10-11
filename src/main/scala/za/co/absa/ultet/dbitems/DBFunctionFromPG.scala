@@ -15,18 +15,19 @@
  */
 package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.model.SQLEntry
+import za.co.absa.ultet.model
+import za.co.absa.ultet.model.{SQLEntry, function}
 
 case class DBFunctionFromPG(sqlEntries: Seq[SQLEntry]) extends DBFunction {
-  override def fnName: String = ???
+  override def fnName: function.FunctionName = ???
 
-  override def paramTypes: Seq[String] = ???
+  override def paramTypes: Seq[function.FunctionArgumentType] = ???
 
-  override def owner: String = ???
+  override def owner: model.UserName = ???
 
-  override def users: Seq[String] = ???
+  override def users: Seq[model.UserName] = ???
 
-  override def schema: String = ???
+  override def schema: model.SchemaName = ???
 
-  override def database: String = ???
+  override def database: model.DatabaseName = ???
 }

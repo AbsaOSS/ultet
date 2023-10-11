@@ -15,13 +15,16 @@
  */
 package za.co.absa.ultet.dbitems
 
-trait DBFunction extends DBItem {
-def fnName: String
-  def paramTypes: Seq[String]
-  def owner: String
-  def users: Seq[String]
-  def schema: String
-  def database: String
+import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
+import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionName}
 
+trait DBFunction extends DBItem {
+
+  def fnName: FunctionName
+  def paramTypes: Seq[FunctionArgumentType]
+  def owner: UserName
+  def users: Seq[UserName]
+  def schema: SchemaName
+  def database: DatabaseName
 
 }

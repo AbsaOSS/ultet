@@ -20,12 +20,13 @@ import za.co.absa.ultet.model.{SchemaName, UserName}
 case class FunctionGrant(
                           schemaName: SchemaName,
                           functionName: FunctionName,
-                          arguments: FunctionArguments,
+                          arguments: Seq[FunctionArgumentType],
                           userToGrantExecuteTo: UserName
                         ) extends FunctionEntry {
   override def sqlExpression: String = {
+    val argumentsString = arguments.map(_.value).mkString(",")
     s"""GRANT EXECUTE ON FUNCTION
-       |  ${schemaName.value}.${functionName.value}($argumentTypesListAsString)
+       |  ${schemaName.value}.${functionName.value}($argumentsString)
        |TO
        |  ${userToGrantExecuteTo.value};
        |""".stripMargin

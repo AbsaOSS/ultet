@@ -19,19 +19,6 @@ package za.co.absa.ultet.model
 package object function {
 
   case class FunctionName(value: String) extends AnyVal
-
-  case class ArgumentName(value: String) extends AnyVal
-  case class ArgumentType(value: String) extends AnyVal
-  type FunctionArguments = Seq[(ArgumentName, ArgumentType)]
-
-  case class OutputType(value: String) extends AnyVal
-  case class OutputRecordKey(value: String) extends AnyVal
-
-  sealed trait FunctionOutput
-  case object NoOutput extends FunctionOutput
-  case class SingleValueOutput(outputType: OutputType) extends FunctionOutput
-  case class RecordOutput(record: Seq[(OutputRecordKey, OutputType)]) extends FunctionOutput
-
-  case class FunctionBodyCode(value: String) extends AnyVal
+  case class FunctionArgumentType(value: String) extends AnyVal
 
 }

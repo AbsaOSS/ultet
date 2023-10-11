@@ -18,6 +18,8 @@ package za.co.absa.ultet
 
 package object model {
 
+  case class DatabaseName(value: String) extends AnyVal
+
   case class SchemaName(value: String) extends AnyVal
 
   case class UserName(value: String) extends AnyVal
