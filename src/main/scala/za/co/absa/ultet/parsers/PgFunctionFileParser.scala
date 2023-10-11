@@ -117,11 +117,11 @@ object PgFunctionFileParser {
   val schemaFnParamsRx = """(?i)CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(\w+)\.(\w+)\s*\(([,\s\w]+)\)""".r // need to break params
   //                        1--1       2-----------------2              3---3 45---5    6 7-------7 8
   // 1 - case insensitive matching
-  // 2 - non-capturing group of optinally present " OR REPLACE"
+  // 2 - non-capturing group of optionally present " OR REPLACE"
   // 3 - capturing-group #1 schema name
   // 4 - verbatim "." separates schema from fnName
   // 5 - capturing-group #2
-  // 6,8 - verbatim "()" in which paramters are written
+  // 6,8 - verbatim "()" in which parameters are written
   // 7 - capturing-group #3 - parameters are matched there as a block - \s also covers line-breaks => parsed further later
 
 
