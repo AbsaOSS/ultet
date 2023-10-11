@@ -27,5 +27,6 @@ lazy val ultet = (project in file("."))
     name := "ultet",
     libraryDependencies ++= coreDependencies,
     publish / skip := true,
-    assembly / mainClass := Some("za.co.absa.ultet.Ultet")
+    assembly / mainClass := Some("za.co.absa.ultet.Ultet"),
+    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
   )

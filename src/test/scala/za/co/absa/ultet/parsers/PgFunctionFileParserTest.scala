@@ -3,6 +3,8 @@ package za.co.absa.ultet.parsers
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import za.co.absa.ultet.dbitems.DBFunctionFromSource
+import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
+import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionName}
 
 class PgFunctionFileParserTest extends AnyFlatSpec with Matchers {
 
@@ -28,12 +30,12 @@ class PgFunctionFileParserTest extends AnyFlatSpec with Matchers {
       |--      [Descrip""".stripMargin
 
     PgFunctionFileParser().parseString(functionString) shouldBe DBFunctionFromSource(
-      fnName = "public_functionX",
-      paramTypes = Seq("TEXT", "INTEGER", "hstore"),
-      owner = "owner_user123",
-      users = Seq("user_for_accessA", "user_for_accessB", "user_for_accessZ"),
-      schema = "my_schema1",
-      database = "eXample_db",
+      fnName = FunctionName("public_functionX"),
+      paramTypes = Seq("TEXT", "INTEGER", "hstore").map(FunctionArgumentType),
+      owner = UserName("owner_user123"),
+      users = Seq("user_for_accessA", "user_for_accessB", "user_for_accessZ").map(UserName),
+      schema = SchemaName("my_schema1"),
+      database = DatabaseName("eXample_db"),
       sqlBody = functionString // the whole thing
     )
 
@@ -56,12 +58,12 @@ class PgFunctionFileParserTest extends AnyFlatSpec with Matchers {
         |--      [Descrip""".stripMargin
 
     PgFunctionFileParser().parseString(functionString) shouldBe DBFunctionFromSource(
-      fnName = "public_functionX",
+      fnName = FunctionName("public_functionX"),
       paramTypes = Seq.empty,
-      owner = "owner_user123",
+      owner = UserName("owner_user123"),
       users = Seq.empty,
-      schema = "my_schema1",
-      database = "eXample_db",
+      schema = SchemaName("my_schema1"),
+      database = DatabaseName("eXample_db"),
       sqlBody = functionString // the whole thing
     )
 

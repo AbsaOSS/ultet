@@ -45,7 +45,7 @@ object DBTableMember {
                                )
     extends DBTableMember
 
-  class DBTableColumn(
+  case class DBTableColumn(
                        columnName: ColumnName,
                        dataType: String,
                        notNull: Boolean,

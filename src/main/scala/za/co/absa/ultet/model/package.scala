@@ -36,6 +36,4 @@ package object model {
 
   case class PrimaryKeyName(value: String) extends DBObjectName(value)
 
-  case class ColumnName(value: String) extends AnyVal
-
 }

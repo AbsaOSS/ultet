@@ -21,6 +21,11 @@ object Dependencies {
     "org.scalactic" %% "scalactic" % "3.2.17",
     "org.scalatest" %% "scalatest" % "3.2.17" % "test",
     "com.github.scopt" %% "scopt" % "4.1.0",
-    "com.typesafe" % "config" % "1.4.2"
+    "com.typesafe" % "config" % "1.4.2",
+    "io.circe" %% "circe-yaml" % "0.14.2",
+    "io.circe" %% "circe-core" % "0.14.2",
+    "io.circe" %% "circe-generic" % "0.14.2",
+    "io.circe" %% "circe-parser" % "0.14.2",
+    "io.circe" %% "circe-generic-extras" % "0.14.2"
   )
 }
