@@ -54,6 +54,12 @@ case class DBTable(
   }
 
   def -(other: DBTable): Seq[TableEntry] = {
+    // TODO redo:
+    // description change: ok
+    // name: drop
+    // datatype: ok + todo
+    // not null -> to false ok, to true -> throw exception
+    // default -> ok
     val removeColumns = this.columns.filterNot(other.columns.contains) // remove those that are not found in other.columns
     val addColumns = other.columns.filterNot(this.columns.contains) // add those that are not found in this.columns
 
