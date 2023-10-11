@@ -16,7 +16,11 @@
 package za.co.absa.ultet.model.table
 
 import za.co.absa.ultet.model.SQLEntry
+import za.co.absa.ultet.model.TransactionGroup
 
 trait TableEntry extends SQLEntry {
+  def schema: String
+  def tblName: String
 
+  def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
 }

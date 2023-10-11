@@ -16,7 +16,9 @@
 package za.co.absa.ultet.model.function
 
 import za.co.absa.ultet.model.SQLEntry
+import za.co.absa.ultet.model.TransactionGroup
 
 trait FunctionEntry extends SQLEntry {
+  override def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
 
 }

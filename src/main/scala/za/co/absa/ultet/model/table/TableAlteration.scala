@@ -15,16 +15,4 @@
  */
 package za.co.absa.ultet.model.table
 
-import za.co.absa.ultet.model.TransactionGroup
-import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
-
-case class TableAlteration(
-  schema: String,
-  tblName: String,
-) extends TableEntry {
-  override def sqlExpression: String = ???
-
-  override def transactionGroup: TransactionGroup = TransactionGroup.Objects
-
-  override def orderInTransaction: Int = ???
-}
+trait TableAlteration extends TableEntry
