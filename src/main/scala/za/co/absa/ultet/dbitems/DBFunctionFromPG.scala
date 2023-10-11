@@ -50,7 +50,7 @@ object DBFunctionFromPG {
   }
 
   def fetchAllOverloads(schemaName: SchemaName, functionName: FunctionName)
-                      (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
+                       (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
     val query =
       s"""
          |SELECT
