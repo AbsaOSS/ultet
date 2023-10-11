@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 ABSA Group Limited
+ * Copyright 2023 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package za.co.absa.ultet.dbitems
 
-import Dependencies._
+import za.co.absa.ultet.model.SQLEntry
 
-ThisBuild / organization := "za.co.absa.ultet"
+case class DBFunctionFromPG(sqlEntries: Seq[SQLEntry]) extends DBFunction {
+  override def fnName: String = ???
 
-lazy val scala212 = "2.12.17"
+  override def paramTypes: Seq[String] = ???
 
-ThisBuild / scalaVersion := scala212
+  override def owner: String = ???
 
-lazy val ultet = (project in file("."))
-  .settings(
-    name := "ultet",
-    libraryDependencies ++= coreDependencies,
-    publish / skip := true,
-    assembly / mainClass := Some("za.co.absa.ultet.Ultet")
-  )
+  override def users: Seq[String] = ???
+
+  override def schema: String = ???
+
+  override def database: String = ???
+}

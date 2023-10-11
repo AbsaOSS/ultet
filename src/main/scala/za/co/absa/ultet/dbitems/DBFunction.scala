@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 ABSA Group Limited
+ * Copyright 2023 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package za.co.absa.ultet.dbitems
 
-import Dependencies._
+trait DBFunction extends DBItem {
+def fnName: String
+  def paramTypes: Seq[String]
+  def owner: String
+  def users: Seq[String]
+  def schema: String
+  def database: String
 
-ThisBuild / organization := "za.co.absa.ultet"
 
-lazy val scala212 = "2.12.17"
-
-ThisBuild / scalaVersion := scala212
-
-lazy val ultet = (project in file("."))
-  .settings(
-    name := "ultet",
-    libraryDependencies ++= coreDependencies,
-    publish / skip := true,
-    assembly / mainClass := Some("za.co.absa.ultet.Ultet")
-  )
+}

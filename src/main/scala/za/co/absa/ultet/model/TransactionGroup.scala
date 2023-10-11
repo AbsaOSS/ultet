@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 ABSA Group Limited
+ * Copyright 2023 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-import Dependencies._
+package za.co.absa.ultet.model
 
-ThisBuild / organization := "za.co.absa.ultet"
+object TransactionGroup extends Enumeration {
 
-lazy val scala212 = "2.12.17"
+  final type TransactionGroup = Value
 
-ThisBuild / scalaVersion := scala212
-
-lazy val ultet = (project in file("."))
-  .settings(
-    name := "ultet",
-    libraryDependencies ++= coreDependencies,
-    publish / skip := true,
-    assembly / mainClass := Some("za.co.absa.ultet.Ultet")
-  )
+  final val Databases, Roles, Objects, Indexes = Value // objects here represent schemas, tables, functions
+}

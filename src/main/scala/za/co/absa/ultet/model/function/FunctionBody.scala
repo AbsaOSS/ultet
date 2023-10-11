@@ -15,10 +15,12 @@
  */
 package za.co.absa.ultet.model.function
 
-case class FunctionBody() extends FunctionEntry {
-  override def sqlExpression: String = ???
+import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
-  override def transactionGroup: String = ???
+case class FunctionBody(
+  sqlExpression: String
+) extends FunctionEntry {
+  override def transactionGroup: TransactionGroup = ???
 
-  override def order: Int = ???
+  override def orderInTransaction: Int = ???
 }
