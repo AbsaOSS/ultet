@@ -16,9 +16,7 @@
 package za.co.absa.ultet.parsers
 
 import za.co.absa.ultet.dbitems.DBFunctionFromSource
-import za.co.absa.ultet.model.function.FunctionBody
 
-import java.io.File
 import java.net.URI
 import java.nio.file.{Files, Paths}
 import java.util.stream.Collectors
@@ -79,23 +77,6 @@ case class PgFunctionFileParser() {
       case _ => throw new IllegalStateException(s"Found more than 2 create function mentions in $str")
     }
 
-//    val (schemaName, fnName, inParamTypes) = str match {
-//      case schemaFnParamsRx(schema, fn, paramsStr) => {
-//        val paramsUnparsed = paramsStr.split(',').map(_.trim).toSeq
-//        val optParamTypes: Seq[Option[String]] = paramsUnparsed.map { param =>
-//          param match {
-//            case singleParamCapturingRx(inOut, _, paramType) =>
-//              if (inOut == "IN") Some(paramType) else None
-//
-//            case _ => throw new IllegalStateException(s"Could not parameter from $param")
-//          }
-//        }
-//        (schema, fn, optParamTypes.flatten) // just keep the IN paramTypes
-//      }
-//
-//      case _ => throw new IllegalStateException(s"Could not parse schema name or function name from $str")
-//    }
-
     DBFunctionFromSource(fnName, inParamTypes, owner, users, schemaName, databaseName, str)
   }
 }
@@ -106,8 +87,6 @@ object PgFunctionFileParser {
   val dbUsersRx = """--\s*database:\s*([_a-zA-Z0-9]+)\s*\((\s*(?:[_a-zA-Z0-9]+)\s*(?:,\s*[_a-zA-Z0-9]+\s*)*\s*)\)""".r // need to ,-break and trim the users
   val schemaFnParamsRx = """(?i)CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+([_a-zA-Z0-9]+)\.([_a-zA-Z0-9]+)\s*\(([,\s_a-zA-Z0-9]+)\)""".r // need to break params
 
-  val singleParamCapturingRx = """(?i)\s*(IN|OUT)\s+([_a-zA-Z0-9]+)\s+([_a-zA-Z0-9]+)\s*""".r
-
-
+  val singleParamCapturingRx = """(?i)\s*(IN|OUT)\s+([_a-zA-Z0-9]+)\s+([_a-zA-Z0-9]+)\s*""".r // used to break up params from ^^
 
 }
