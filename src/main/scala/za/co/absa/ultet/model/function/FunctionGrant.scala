@@ -15,7 +15,7 @@
  */
 package za.co.absa.ultet.model.function
 
-case class FunctionGrant() extends FunctionEntry () {
+case class FunctionGrant() extends FunctionEntry {
   override def sqlExpression: String = ???
 
   override def transactionGroup: String = ???
