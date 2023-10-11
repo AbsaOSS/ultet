@@ -15,17 +15,25 @@
  */
 package za.co.absa.ultet.model.function
 
+import za.co.absa.ultet.model.{SchemaName, UserName}
 import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
 case class FunctionGrant(
-  schema: String,
-  fnName: String,
-  paramTypes: Seq[String],
-  user:String,
-) extends FunctionEntry {
-  override def sqlExpression: String = ???
+                          schemaName: SchemaName,
+                          functionName: FunctionName,
+                          arguments: Seq[FunctionArgumentType],
+                          userToGrantExecuteTo: UserName
+                        ) extends FunctionEntry {
+  override def sqlExpression: String = {
+    val argumentsString = arguments.map(_.value).mkString(",")
+    s"""GRANT EXECUTE ON FUNCTION
+       |  ${schemaName.value}.${functionName.value}($argumentsString)
+       |TO
+       |  ${userToGrantExecuteTo.value};
+       |""".stripMargin
+  }
 
   override def transactionGroup: TransactionGroup = ???
 
-  override def orderInTransaction: Int = ???
+  override def orderInTransaction: Int = 103
 }

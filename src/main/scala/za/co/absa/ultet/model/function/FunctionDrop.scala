@@ -15,12 +15,20 @@
  */
 package za.co.absa.ultet.model.function
 
+import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
-case class FunctionDrop() extends FunctionEntry {
-  override def sqlExpression: String = ???
+case class FunctionDrop(
+                         schemaName: SchemaName,
+                         functionName: FunctionName,
+                         arguments: Seq[FunctionArgumentType]
+                       ) extends FunctionEntry {
+  override def sqlExpression: String = {
+    val argumentsString = arguments.map(_.value).mkString(",")
+    s"""DROP FUNCTION ${schemaName.value}.${functionName.value}($argumentsString);"""
+  }
 
   override def transactionGroup: TransactionGroup = ???
 
-  override def orderInTransaction: Int = ???
+  override def orderInTransaction: Int = 100
 }
