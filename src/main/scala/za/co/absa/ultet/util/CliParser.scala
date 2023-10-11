@@ -18,11 +18,6 @@ package za.co.absa.ultet.util
 
 import scopt.OParser
 
-case class Config(yamlSource: String = "",
-                  dryRun: Boolean = false,
-                  dbConnectionPropertiesPath: String = "",
-                  patchFilePath: Option[String] = None)
-
 object CliParser {
   private val builder = OParser.builder[Config]
   val parser = {
