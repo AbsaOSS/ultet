@@ -26,7 +26,7 @@ object Ultet {
   def listFiles(pathString: String): List[Path] = {
     val path = Paths.get(pathString)
     val directory = path.getParent
-    val matcher = FileSystems.getDefault.getPathMatcher(s"glob:*${path.getFileName}")
+    val matcher = FileSystems.getDefault.getPathMatcher(s"glob:${path.getFileName}")
 
     Files.list(directory)
       .iterator()
