@@ -14,18 +14,11 @@
  * limitations under the License.
  */
 
-import Dependencies._
+import sbt._
 
-ThisBuild / organization := "za.co.absa.ultet"
-
-lazy val scala212 = "2.12.17"
-
-ThisBuild / scalaVersion := scala212
-
-lazy val ultet = (project in file("."))
-  .settings(
-    name := "ultet",
-    libraryDependencies ++= coreDependencies,
-    publish / skip := true,
-    mainClass in assembly := Some("za.co.absa.ultet.Ultet"),
+object Dependencies {
+  lazy val coreDependencies: Seq[ModuleID] = Seq(
+    "org.scalactic" %% "scalactic" % "3.2.17",
+    "org.scalatest" %% "scalatest" % "3.2.17" % "test"
   )
+}
