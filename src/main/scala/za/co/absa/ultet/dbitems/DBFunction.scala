@@ -16,5 +16,12 @@
 package za.co.absa.ultet.dbitems
 
 trait DBFunction extends DBItem {
+def fnName: String
+  def paramTypes: Seq[String]
+  def owner: String
+  def users: Seq[String]
+  def schema: String
+  def database: String
+
 
 }

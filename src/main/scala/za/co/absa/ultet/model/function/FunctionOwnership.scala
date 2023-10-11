@@ -15,7 +15,7 @@
  */
 package za.co.absa.ultet.model.function
 
-case class FunctionOwnership() extends FunctionEntry {
+case class FunctionOwnership(owner: String) extends FunctionEntry {
   override def sqlExpression: String = ???
 
   override def transactionGroup: String = ???

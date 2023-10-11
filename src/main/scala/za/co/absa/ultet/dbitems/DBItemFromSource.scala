@@ -16,15 +16,24 @@
 package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.model.SQLEntry
-import za.co.absa.ultet.model.function.FunctionParam
+import za.co.absa.ultet.model.function.{FunctionBody, FunctionOwnership, FunctionGrant}
 
 case class DBItemFromSource(
-  name: String,
-  params: Seq[FunctionParam],
+  fnName: String,
+  paramTypes: Seq[String],
   owner: String,
   users: Seq[String],
-  database: String
+  schema: String,
+  database: String,
+  sqlBody: String
 ) extends DBFunction {
-  override def sqlEntries: Seq[SQLEntry] = ???
+  override def sqlEntries: Seq[SQLEntry] = {
+    Seq(FunctionBody(sqlBody)) ++
+    users.map { user =>
+      // e.g. GRANT EXECUTE ON FUNCTION schema.fnName(UUID, TEXT, INTEGER, JSONB, JSONB) TO user;
+      FunctionGrant(schema, fnName, paramTypes, user)
+    } ++
+    Seq(FunctionOwnership(owner))
+  }
 
 }

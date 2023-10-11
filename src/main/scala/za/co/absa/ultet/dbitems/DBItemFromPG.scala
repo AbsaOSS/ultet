@@ -17,4 +17,16 @@ package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.model.SQLEntry
 
-case class DBItemFromPG(sqlEntries: Seq[SQLEntry]) extends DBFunction
+case class DBItemFromPG(sqlEntries: Seq[SQLEntry]) extends DBFunction {
+  override def fnName: String = ???
+
+  override def paramTypes: Seq[String] = ???
+
+  override def owner: String = ???
+
+  override def users: Seq[String] = ???
+
+  override def schema: String = ???
+
+  override def database: String = ???
+}
