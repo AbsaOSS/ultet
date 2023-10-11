@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 package za.co.absa.ultet.model.table
+import za.co.absa.ultet.model.SchemaName
 
 case class TableCreation(
-  schema: String,
-  tblName: String,
+  schemaName: SchemaName,
+  tableName: TableName,
 ) extends TableEntry {
 
   override def sqlExpression: String = ???

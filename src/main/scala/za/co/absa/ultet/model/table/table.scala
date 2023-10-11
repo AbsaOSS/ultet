@@ -13,15 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.table
 
-import za.co.absa.ultet.model.SQLEntry
-import za.co.absa.ultet.model.TransactionGroup
-import za.co.absa.ultet.model.SchemaName
+package za.co.absa.ultet.model
 
-trait TableEntry extends SQLEntry {
-  def schemaName: SchemaName
-  def tableName: TableName
+package object table {
 
-  def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
+  case class TableName(value: String) extends AnyVal
+
+  case class OwnerName(value: String) extends AnyVal
+
 }
