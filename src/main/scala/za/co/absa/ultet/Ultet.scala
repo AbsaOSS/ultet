@@ -52,6 +52,13 @@ object Ultet {
     resultSets
   }
 
+  def sortEntries(entries: Seq[SQLEntry]): Seq[SQLEntry] = {
+    entries.sortWith {
+      case (a, b) if a.transactionGroup == b.transactionGroup => a.orderInTransaction < b.orderInTransaction
+      case (a, b) => a.transactionGroup.id < b.transactionGroup.id
+    }
+  }
+
   def listFiles(pathString: String): List[Path] = {
     val path = Paths.get(pathString)
     val directory = path.getParent
@@ -80,7 +87,8 @@ object Ultet {
 
     val connection: Connection = DriverManager.getConnection(dbConnection, dbProperties.user, dbProperties.password)
     val entries: Seq[SQLEntry] = Seq.empty // TODO
-    val resultSets = runTransaction(connection, entries)
+    val orderedEntries = sortEntries(entries)
+    val resultSets = runTransaction(connection, orderedEntries)
 
     connection.close()
 
