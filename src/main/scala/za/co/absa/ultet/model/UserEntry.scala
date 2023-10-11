@@ -19,7 +19,19 @@ package za.co.absa.ultet.model
 import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
 case class UserEntry(name: UserName) extends SQLEntry {
-  override def sqlExpression: String = s"CREATE USER ${name.value};"
+  override def sqlExpression: String = s"""DO
+                                          |$$do$$
+                                          |  BEGIN
+                                          |    IF EXISTS (
+                                          |      SELECT FROM pg_catalog.pg_roles
+                                          |      WHERE  rolname = '$name') THEN
+                                          |
+                                          |      RAISE NOTICE 'Role "$name" already exists. Skipping.';
+                                          |    ELSE
+                                          |      CREATE ROLE $name;
+                                          |    END IF;
+                                          |  END
+                                          |$$do$$;""".stripMargin
 
   override def transactionGroup: TransactionGroup = TransactionGroup.Roles
 
