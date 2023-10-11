@@ -16,6 +16,7 @@
 package za.co.absa.ultet.model.function
 
 import za.co.absa.ultet.model.SchemaName
+import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
 case class FunctionDrop(
                          schemaName: SchemaName,
@@ -27,7 +28,7 @@ case class FunctionDrop(
     s"""DROP FUNCTION ${schemaName.value}.${functionName.value}($argumentsString);"""
   }
 
-  override def transactionGroup: String = ???
+  override def transactionGroup: TransactionGroup = ???
 
-  override def order: Int = 100
+  override def orderInTransaction: Int = 100
 }

@@ -16,8 +16,10 @@
 
 package za.co.absa.ultet.model
 
+import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
+
 trait SQLEntry {
   def sqlExpression: String
-  def transactionGroup: String
-  def order: Int
+  def transactionGroup: TransactionGroup
+  def orderInTransaction: Int
 }

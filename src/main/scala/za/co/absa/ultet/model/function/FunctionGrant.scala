@@ -16,6 +16,7 @@
 package za.co.absa.ultet.model.function
 
 import za.co.absa.ultet.model.{SchemaName, UserName}
+import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
 case class FunctionGrant(
                           schemaName: SchemaName,
@@ -32,7 +33,7 @@ case class FunctionGrant(
        |""".stripMargin
   }
 
-  override def transactionGroup: String = ???
+  override def transactionGroup: TransactionGroup = ???
 
-  override def order: Int = 102
+  override def orderInTransaction: Int = 102
 }
