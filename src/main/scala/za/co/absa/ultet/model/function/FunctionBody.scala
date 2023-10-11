@@ -15,10 +15,45 @@
  */
 package za.co.absa.ultet.model.function
 
-case class FunctionBody() extends FunctionEntry {
-  override def sqlExpression: String = ???
+import za.co.absa.ultet.model.SchemaName
+
+case class FunctionBody(
+                         schemaName: SchemaName,
+                         functionName: FunctionName,
+                         arguments: FunctionArguments,
+                         functionOutput: FunctionOutput,
+                         bodyCode: FunctionBodyCode
+                       ) extends FunctionEntry {
+  override def sqlExpression: String = {
+    val returnType = functionOutput match {
+      case NoOutput => "VOID"
+      case SingleValueOutput(outputType) => outputType.value
+      case RecordOutput(_) => "RECORD"
+    }
+    val insSeq = arguments.map { case (key, tpe) =>
+      s"IN ${key.value} ${tpe.value}"
+    }
+    val outsSeq = functionOutput match {
+      case RecordOutput(record) => record.map { case (key, tpe) =>
+        s"OUT ${key.value} ${tpe.value}"
+      }
+      case _ => Seq.empty[String]
+    }
+    val signature = (insSeq ++ outsSeq).mkString(", ")
+    s"""CREATE FUNCTION
+       |  ${schemaName.value}.${functionName.value}($signature)
+       |  RETURNS $returnType
+       |AS
+       |$$$$
+       |BEGIN
+       |${bodyCode.value}
+       |END;
+       |$$$$
+       |LANGUAGE plpgsql VOLATILE SECURITY DEFINER;
+       |""".stripMargin
+  }
 
   override def transactionGroup: String = ???
 
-  override def order: Int = ???
+  override def order: Int = 101
 }

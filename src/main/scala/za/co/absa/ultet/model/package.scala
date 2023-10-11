@@ -13,20 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
 
-import za.co.absa.ultet.model.SchemaName
+package za.co.absa.ultet
 
-case class FunctionDrop(
-                         schemaName: SchemaName,
-                         functionName: FunctionName,
-                         arguments: FunctionArguments
-                       ) extends FunctionEntry {
-  override def sqlExpression: String = {
-    s"""DROP FUNCTION ${schemaName.value}.${functionName.value}($argumentTypesListAsString);"""
-  }
+package object model {
 
-  override def transactionGroup: String = ???
+  case class SchemaName(value: String) extends AnyVal
 
-  override def order: Int = 100
+  case class UserName(value: String) extends AnyVal
+
 }

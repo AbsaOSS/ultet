@@ -15,8 +15,16 @@
  */
 package za.co.absa.ultet.model.function
 
-import za.co.absa.ultet.model.SQLEntry
+import za.co.absa.ultet.model.{SQLEntry, SchemaName}
 
 trait FunctionEntry extends SQLEntry {
+
+  val schemaName: SchemaName
+
+  val functionName: FunctionName
+
+  val arguments: FunctionArguments
+
+  def argumentTypesListAsString: String = arguments.map(_._2).mkString(",")
 
 }
