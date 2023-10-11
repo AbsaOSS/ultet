@@ -20,6 +20,4 @@ package object table {
 
   case class TableName(value: String) extends AnyVal
 
-  case class OwnerName(value: String) extends AnyVal
-
 }

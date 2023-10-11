@@ -15,12 +15,12 @@
  */
 package za.co.absa.ultet.model.table
 
-import za.co.absa.ultet.model.SchemaName
+import za.co.absa.ultet.model.{SchemaName, UserName}
 
 case class TableOwnership(
   schemaName: SchemaName,
   tableName: TableName,
-  owner: OwnerName
+  owner: UserName
 ) extends TableAlteration {
 
   override def sqlExpression: String = {
