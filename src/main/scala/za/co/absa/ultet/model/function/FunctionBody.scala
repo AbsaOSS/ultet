@@ -15,8 +15,6 @@
  */
 package za.co.absa.ultet.model.function
 
-import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
-
 case class FunctionBody(sqlExpression: String) extends FunctionEntry {
   override def orderInTransaction: Int = 101
 }
