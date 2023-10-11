@@ -18,6 +18,7 @@ package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.dbitems.DBTableMember._
 import za.co.absa.ultet.model.table.index.{TableIndexCreate, TableIndexDrop}
+import za.co.absa.ultet.model.table.constraint.{TablePrimaryKeyDrop, TablePrimaryKeyAdd}
 import za.co.absa.ultet.model.table.column.{TableColumnDrop, TableColumnAdd}
 import za.co.absa.ultet.model.table.{TableCreation, TableEntry, TableName}
 import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
@@ -59,12 +60,22 @@ case class DBTable(
     val removeIndices = this.indexes.filterNot(other.indexes.contains)
     val addIndices = other.indexes.filterNot(this.indexes.contains)
 
+    val pkEntries = (this.primaryKey, other.primaryKey) match {
+      case (x, y) if x == y => Seq.empty
+      case (Some(existingPk), Some(newPk)) => Seq (
+        TablePrimaryKeyDrop(tableName, existingPk),
+        TablePrimaryKeyAdd(tableName, newPk)
+      )
+      case (None, Some(newPk)) => Seq(TablePrimaryKeyAdd(tableName, newPk))
+      case (Some(existingPk), None) => Seq(TablePrimaryKeyDrop(tableName, existingPk))
+    }
+
     // todo alter description?
     // todo alter owner
-    // todo replace primary key
 
     removeIndices.map(idx => TableIndexDrop(tableName, idx.tableName)) ++
     removeColumns.map(col => TableColumnDrop(tableName, col.columnName)) ++
+    pkEntries ++
     addColumns.map(col => TableColumnAdd(tableName, col)) ++
     addIndices.map(idx => TableIndexCreate(idx))
   }
