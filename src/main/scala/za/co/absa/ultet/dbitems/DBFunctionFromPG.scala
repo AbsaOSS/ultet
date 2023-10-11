@@ -16,19 +16,84 @@
 package za.co.absa.ultet.dbitems
 
 
-import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionName}
-import za.co.absa.ultet.model.{DatabaseName, SQLEntry, SchemaName, UserName}
+import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionDrop, FunctionName}
+import za.co.absa.ultet.model.{SQLEntry, SchemaName}
 
-case class DBFunctionFromPG(sqlEntries: Seq[SQLEntry]) extends DBFunction {
-  override def fnName: FunctionName = ???
+import java.sql.Connection
 
-  override def paramTypes: Seq[FunctionArgumentType] = ???
+case class DBFunctionFromPG(
+                             schema: SchemaName,
+                             fnName: FunctionName,
+                             paramTypes: Seq[FunctionArgumentType]
+                           ) extends DBFunction {
+  override def sqlEntries: Seq[SQLEntry] = Seq(FunctionDrop(schema, fnName, paramTypes))
+}
 
-  override def owner: UserName = ???
+object DBFunctionFromPG {
 
-  override def users: Seq[UserName] = ???
+  def fetchAllOfSchema(schemaName: SchemaName)
+                      (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
+    val query =
+      s"""
+         |SELECT
+         |  p.proname AS fn_name,
+         |  pg_catalog.pg_get_function_arguments(p.oid) AS in_and_out_arguments
+         |FROM
+         |  pg_catalog.pg_namespace n JOIN
+         |  pg_catalog.pg_proc p ON p.pronamespace = n.oid
+         |WHERE
+         |  n.nspname = '${schemaName.value}' AND
+         |  p.prokind = 'f';
+         |""".stripMargin
 
-  override def schema: SchemaName = ???
+    fetchAllOfSchemaWithQuery(schemaName, query)
+  }
 
-  override def database: DatabaseName = ???
+  def fetchAllOverloads(schemaName: SchemaName, functionName: FunctionName)
+                       (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
+    val query =
+      s"""
+         |SELECT
+         |  p.proname AS fn_name,
+         |  pg_catalog.pg_get_function_arguments(p.oid) AS in_and_out_arguments
+         |FROM
+         |  pg_catalog.pg_namespace n JOIN
+         |  pg_catalog.pg_proc p ON p.pronamespace = n.oid
+         |WHERE
+         |  n.nspname = '${schemaName.value}' AND
+         |  p.proname = '${functionName.value}' AND
+         |  p.prokind = 'f';
+         |""".stripMargin
+
+    fetchAllOfSchemaWithQuery(schemaName, query)
+  }
+
+  private def fetchAllOfSchemaWithQuery(schemaName: SchemaName, query: String)
+                                       (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
+    val preparedStatement = jdbcConnection.prepareStatement(query)
+    val result = preparedStatement.executeQuery()
+    val seqBuilder = Seq.newBuilder[DBFunctionFromPG]
+
+    while (result.next()) {
+      val fnName = result.getString("fn_name")
+      val inAndOutArguments = result.getString("in_and_out_arguments")
+      val inArguments = inAndOutArguments
+        .split(",")
+        .map(_.trim)
+        .filterNot(_.toUpperCase.startsWith("OUT"))
+      val argumentTypes = inArguments
+        .map(_.split(" ")(1))
+        .map(FunctionArgumentType)
+
+      val dbFunctionFromPG = DBFunctionFromPG(
+        schemaName,
+        FunctionName(fnName),
+        argumentTypes
+      )
+      seqBuilder += dbFunctionFromPG
+    }
+
+    seqBuilder.result()
+  }
+
 }
