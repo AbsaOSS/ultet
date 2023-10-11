@@ -17,9 +17,9 @@ package za.co.absa.ultet.model.function
 
 import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
-case class FunctionBody() extends FunctionEntry {
-  override def sqlExpression: String = ???
-
+case class FunctionBody(
+  sqlExpression: String
+) extends FunctionEntry {
   override def transactionGroup: TransactionGroup = ???
 
   override def orderInTransaction: Int = ???
