@@ -13,12 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
 
-case class FunctionOwnership() extends FunctionEntry {
-  override def sqlExpression: String = ???
+package za.co.absa.ultet.model
 
-  override def transactionGroup: TransactionGroup = ???
 
-  override def order: Int = ???
+sealed abstract class TransactionGroup
+
+object TransactionGroup {
+  final case object Database      extends TransactionGroup
+  final case object Role          extends TransactionGroup
+  final case object Schema        extends TransactionGroup
+  final case object Function      extends TransactionGroup
+  final case object Table         extends TransactionGroup
+  final case object AdditionalSQL extends TransactionGroup
+  final case object Index         extends TransactionGroup
 }
