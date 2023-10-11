@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package za.co.absa.ultet.model.function
 
-package za.co.absa.ultet.dbitems
+case class FunctionBody() extends FunctionEntry {
+  override def sqlExpression: String = ???
 
-import za.co.absa.ultet.model.SQLEntry
+  override def transactionGroup: String = ???
 
-trait DBItem {
-  def sqlEntry: SQLEntry
+  override def order: Int = ???
 }

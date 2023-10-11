@@ -13,11 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package za.co.absa.ultet.model.function
 
-package za.co.absa.ultet.sqlentry
+case class FunctionGrant extends FunctionEntry () {
+  override def sqlExpression: String = ???
 
-trait SQLEntry {
-  def sqlExpression: String
-  def transactionGroup: String
-  def order: Int
+  override def transactionGroup: String = ???
+
+  override def order: Int = ???
 }
