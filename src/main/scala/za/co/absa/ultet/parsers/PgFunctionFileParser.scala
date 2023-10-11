@@ -16,6 +16,8 @@
 package za.co.absa.ultet.parsers
 
 import za.co.absa.ultet.dbitems.DBFunctionFromSource
+import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionName}
+import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 import za.co.absa.ultet.parsers.PgFunctionFileParser._
 
 import java.net.URI
@@ -86,7 +88,15 @@ case class PgFunctionFileParser() {
     val (databaseName, users) = parseDatabaseNameAndUsersFromSql(str)
     val (schemaName, fnName, inParamTypes) = parseSchemaNameFnNameAndInParamTypesFromSql(str)
 
-    DBFunctionFromSource(fnName, inParamTypes, owner, users, schemaName, databaseName, str)
+    DBFunctionFromSource(
+      FunctionName(fnName),
+      inParamTypes.map(FunctionArgumentType),
+      UserName(owner),
+      users.map(UserName),
+      SchemaName(schemaName),
+      DatabaseName(databaseName),
+      str
+    )
   }
 }
 
