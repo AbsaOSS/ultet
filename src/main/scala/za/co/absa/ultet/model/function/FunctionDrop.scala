@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 ABSA Group Limited
+ * Copyright 2023 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,19 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package za.co.absa.ultet.model.function
 
-import Dependencies._
+case class FunctionDrop() extends FunctionEntry {
+  override def sqlExpression: String = ???
 
-ThisBuild / organization := "za.co.absa.ultet"
+  override def transactionGroup: String = ???
 
-lazy val scala212 = "2.12.17"
-
-ThisBuild / scalaVersion := scala212
-
-lazy val ultet = (project in file("."))
-  .settings(
-    name := "ultet",
-    libraryDependencies ++= coreDependencies,
-    publish / skip := true,
-    mainClass in assembly := Some("za.co.absa.ultet.Ultet"),
-  )
+  override def order: Int = ???
+}

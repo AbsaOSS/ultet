@@ -14,18 +14,4 @@
  * limitations under the License.
  */
 
-import Dependencies._
-
-ThisBuild / organization := "za.co.absa.ultet"
-
-lazy val scala212 = "2.12.17"
-
-ThisBuild / scalaVersion := scala212
-
-lazy val ultet = (project in file("."))
-  .settings(
-    name := "ultet",
-    libraryDependencies ++= coreDependencies,
-    publish / skip := true,
-    mainClass in assembly := Some("za.co.absa.ultet.Ultet"),
-  )
+addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "2.1.3")
