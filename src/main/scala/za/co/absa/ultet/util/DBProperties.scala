@@ -21,7 +21,20 @@ import com.typesafe.config.ConfigFactory
 import java.io.File
 import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 
+// Example of the connection string
 // jdbc:postgresql://[serverName[:portNumber]]/[database][?property=value[;property=value]]
+//
+// Example of the properties file
+// serverName = "myServer"
+// database = "myDatabase"
+// portNumber = "5432"
+// protocol = "jdbc"
+// subprotocol = "postgresql"
+// properties {
+//   user = "admin"
+//   password = "password"
+// }
+
 case class DBProperties(serverName: String,
                         database: String,
                         portNumber: Option[String],
