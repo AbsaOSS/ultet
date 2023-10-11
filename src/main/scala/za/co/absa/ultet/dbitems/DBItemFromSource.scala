@@ -13,11 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
 package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.model.SQLEntry
+import za.co.absa.ultet.model.function.FunctionParam
 
-trait DBItem {
-  def sqlEntries: Seq[SQLEntry]
+case class DBItemFromSource(
+  name: String,
+  params: Seq[FunctionParam],
+  owner: String,
+  users: Seq[String],
+  database: String
+) extends DBFunction {
+  override def sqlEntries: Seq[SQLEntry] = ???
+
 }
