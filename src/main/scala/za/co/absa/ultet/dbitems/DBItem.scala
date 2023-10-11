@@ -44,7 +44,7 @@ object DBItem {
       .flatMap(DBFunctionFromPG.fetchAllOfSchema)
       .toSet
 
-    val users: Set[DBItem] = dbFunctionsFromSource.flatMap(f => f.users ++ Seq(f.owner)).map(DBUser)
+    val users: Set[DBItem] = dbFunctionsFromSource.flatMap(f => f.users :+ f.owner).map(DBUser)
 
     val schemaOwners = owners.mapValues(DBSchema.parseTxtFileContainingSchemaOwner)
     val schemaUsers = dbFunctionsFromSource.groupBy(_.schema).mapValues(_.toSeq.map(_.users).flatten.toSet)
