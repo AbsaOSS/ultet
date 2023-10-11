@@ -28,5 +28,4 @@ lazy val ultet = (project in file("."))
     libraryDependencies ++= coreDependencies,
     publish / skip := true,
     mainClass in assembly := Some("za.co.absa.ultet.Ultet"),
-    test in assembly := {},
   )
