@@ -22,5 +22,5 @@ case class TableCreation(
 
   override def sqlExpression: String = ???
 
-  override def orderInTransaction: Int = ???
+  override def orderInTransaction: Int = 200
 }

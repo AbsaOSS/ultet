@@ -23,5 +23,5 @@ case class TableOwnership(
 
   override def sqlExpression: String = ???
 
-  override def orderInTransaction: Int = ???
+  override def orderInTransaction: Int = 201
 }
