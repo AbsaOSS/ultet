@@ -24,11 +24,11 @@ case class UserEntry(name: UserName) extends SQLEntry {
                                           |  BEGIN
                                           |    IF EXISTS (
                                           |      SELECT FROM pg_catalog.pg_roles
-                                          |      WHERE  rolname = '$name') THEN
+                                          |      WHERE lowercase(rolname) = '${name.normalized}') THEN
                                           |
-                                          |      RAISE NOTICE 'Role "$name" already exists. Skipping.';
+                                          |      RAISE NOTICE 'Role "${name.value}" already exists. Skipping.';
                                           |    ELSE
-                                          |      CREATE ROLE $name;
+                                          |      CREATE ROLE ${name.normalized};
                                           |    END IF;
                                           |  END
                                           |$$do$$;""".stripMargin

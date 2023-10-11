@@ -20,7 +20,7 @@ import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup}
 import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
 case class SchemaCreate(name: SchemaName) extends SQLEntry {
-  override def sqlExpression: String = s"CREATE SCHEMA ${name.value};"
+  override def sqlExpression: String = s"CREATE SCHEMA IF NOT EXISTS ${name.value};"
 
   override def transactionGroup: TransactionGroup = TransactionGroup.Objects
 

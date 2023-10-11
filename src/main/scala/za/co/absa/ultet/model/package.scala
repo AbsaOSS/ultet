@@ -18,10 +18,22 @@ package za.co.absa.ultet
 
 package object model {
 
-  case class DatabaseName(value: String) extends AnyVal
+  sealed abstract class DBObjectName(value: String) {
+    def normalized: String = value.toLowerCase
+  }
 
-  case class SchemaName(value: String) extends AnyVal
+  case class DatabaseName(value: String) extends DBObjectName(value)
 
-  case class UserName(value: String) extends AnyVal
+  case class SchemaName(value: String) extends DBObjectName(value)
+
+  case class UserName(value: String) extends DBObjectName(value)
+
+  case class ColumnName(value: String) extends DBObjectName(value)
+
+  case class TableName(value: String) extends DBObjectName(value)
+
+  case class IndexName(value: String) extends DBObjectName(value)
+
+  case class PrimaryKeyName(value: String) extends DBObjectName(value)
 
 }
