@@ -27,28 +27,57 @@ trait DBItem {
 }
 
 object DBItem {
-
   def createDBItems(filePathsPerSchema: Map[SchemaName, Seq[URI]])
                    (implicit jdbcConnection: Connection): Set[DBItem] = {
-    val tableFiles = filePathsPerSchema.mapValues(_.filter(_.getPath.endsWith(".yml")))
-    val functionFiles = filePathsPerSchema.mapValues(_.filter(_.getPath.endsWith(".sql")))
+    val schemas = filePathsPerSchema.keys
+    val SchemasWithFilesGroupedByType(tables, functions, owners) = groupAllFilesPerSchemaByType(filePathsPerSchema)
 
     // TODO handle tables
 
-    val dbFunctionsFromSource: Set[DBFunctionFromSource] = functionFiles
+    val dbFunctionsFromSource = functions
       .values
       .flatten
       .map(PgFunctionFileParser().parseFile)
       .toSet
-    val dbFunctionsFromPG: Set[DBFunctionFromPG] = functionFiles
+    val dbFunctionsFromPG = functions
       .keys
-      .map(DBFunctionFromPG.fetchAllOfSchema)
-      .flatten
+      .flatMap(DBFunctionFromPG.fetchAllOfSchema)
       .toSet
 
-    val users: Set[DBItem] = dbFunctionsFromSource.map(f => f.users ++ Seq(f.owner)).flatten.map(DBUser)
+    val users: Set[DBItem] = dbFunctionsFromSource.flatMap(f => f.users ++ Seq(f.owner)).map(DBUser)
 
-    dbFunctionsFromSource ++ dbFunctionsFromPG ++ users
+    val schemaOwners = owners.mapValues(DBSchema.parseTxtFileContainingSchemaOwner)
+    val schemaUsers = dbFunctionsFromSource.groupBy(_.schema).mapValues(_.toSeq.map(_.users).flatten.toSet)
+
+    val dbSchemas = schemas.toSet.map { (s: SchemaName) =>
+      val owner = schemaOwners(s)
+      val users = schemaUsers(s) + owner
+      DBSchema(s, owner, users.toSeq)
+    }
+
+    dbFunctionsFromSource ++ dbFunctionsFromPG ++ users ++ dbSchemas
+  }
+
+  private case class SchemasWithFilesGroupedByType(
+                                                    tables: Map[SchemaName, Seq[URI]],
+                                                    functions: Map[SchemaName, Seq[URI]],
+                                                    owners: Map[SchemaName, URI]
+                                                  )
+
+  private def groupAllFilesPerSchemaByType(all: Map[SchemaName, Seq[URI]]): SchemasWithFilesGroupedByType = {
+    val tableFiles = all.mapValues(_.filter(_.getPath.endsWith(".yml")))
+    val functionFiles = all.mapValues(_.filter(_.getPath.endsWith(".sql")))
+    val ownerFiles = all.mapValues(_.filter(_.getPath.endsWith(".txt")))
+    ownerFiles.foreach { case (schemaName, uris) =>
+      if (uris.size > 1) throw new IllegalArgumentException(
+        s"Detected more than one .txt file in schema ${schemaName.normalized}"
+      ) else if (uris.size == 0) throw new IllegalArgumentException(
+        s".txt file in schema ${schemaName.normalized} not found"
+      )
+    }
+    val ownerFilePerSchema = ownerFiles.mapValues(_.head)
+
+    SchemasWithFilesGroupedByType(tableFiles, functionFiles, ownerFilePerSchema)
   }
 
 }
