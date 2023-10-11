@@ -19,6 +19,8 @@ import sbt._
 object Dependencies {
   lazy val coreDependencies: Seq[ModuleID] = Seq(
     "org.scalactic" %% "scalactic" % "3.2.17",
-    "org.scalatest" %% "scalatest" % "3.2.17" % "test"
+    "org.scalatest" %% "scalatest" % "3.2.17" % "test",
+    "com.github.scopt" %% "scopt" % "4.1.0",
+    "com.typesafe" % "config" % "1.4.2"
   )
 }
