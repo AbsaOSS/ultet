@@ -13,10 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
+package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
+import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
+import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionName}
 
-case class FunctionBody(sqlExpression: String) extends FunctionEntry {
-  override def orderInTransaction: Int = 101
+trait DBFunction extends DBItem {
+
+  def fnName: FunctionName
+  def paramTypes: Seq[FunctionArgumentType]
+  def owner: UserName
+  def users: Seq[UserName]
+  def schema: SchemaName
+  def database: DatabaseName
+
 }

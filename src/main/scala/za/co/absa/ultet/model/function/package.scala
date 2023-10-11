@@ -13,10 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
 
-import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
+package za.co.absa.ultet.model
 
-case class FunctionBody(sqlExpression: String) extends FunctionEntry {
-  override def orderInTransaction: Int = 101
+package object function {
+
+  case class FunctionName(value: String) extends AnyVal
+  case class FunctionArgumentType(value: String) extends AnyVal
+
 }
