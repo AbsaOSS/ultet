@@ -16,8 +16,39 @@
 
 package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.model.SQLEntry
+import za.co.absa.ultet.model.{SQLEntry, SchemaName}
+import za.co.absa.ultet.parsers.PgFunctionFileParser
+
+import java.net.URI
+import java.sql.Connection
 
 trait DBItem {
   def sqlEntries: Seq[SQLEntry]
+}
+
+object DBItem {
+
+  def createDBItems(filePathsPerSchema: Map[SchemaName, Seq[URI]])
+                   (implicit jdbcConnection: Connection): Set[DBItem] = {
+    val tableFiles = filePathsPerSchema.mapValues(_.filter(_.getPath.endsWith(".yml")))
+    val functionFiles = filePathsPerSchema.mapValues(_.filter(_.getPath.endsWith(".sql")))
+
+    // TODO handle tables
+
+    val dbFunctionsFromSource: Set[DBFunctionFromSource] = functionFiles
+      .values
+      .flatten
+      .map(PgFunctionFileParser().parseFile)
+      .toSet
+    val dbFunctionsFromPG: Set[DBFunctionFromPG] = functionFiles
+      .keys
+      .map(DBFunctionFromPG.fetchAllOfSchema)
+      .flatten
+      .toSet
+
+    val users: Set[DBItem] = dbFunctionsFromSource.map(f => f.users ++ Seq(f.owner)).flatten.map(DBUser)
+
+    dbFunctionsFromSource ++ dbFunctionsFromPG ++ users
+  }
+
 }

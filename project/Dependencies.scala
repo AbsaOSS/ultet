@@ -21,6 +21,7 @@ object Dependencies {
     "org.scalactic" %% "scalactic" % "3.2.17",
     "org.scalatest" %% "scalatest" % "3.2.17" % "test",
     "com.github.scopt" %% "scopt" % "4.1.0",
-    "com.typesafe" % "config" % "1.4.2"
+    "com.typesafe" % "config" % "1.4.2",
+    "org.postgresql" % "postgresql" % "42.6.0"
   )
 }
