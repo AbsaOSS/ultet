@@ -17,12 +17,41 @@
 package za.co.absa.ultet
 
 import scopt.OParser
+import za.co.absa.ultet.model.SQLEntry
 import za.co.absa.ultet.util.{CliParser, Config, DBProperties}
 
 import java.nio.file._
 import scala.collection.JavaConverters._
+import java.sql.{Connection, ResultSet}
+import scala.util.{Failure, Success, Try}
 
 object Ultet {
+  def runTransaction(entries: Seq[SQLEntry])(implicit connection: Connection): Seq[ResultSet] = {
+    val autoCommitOriginalStatus = connection.getAutoCommit
+    connection.setAutoCommit(false)
+
+    val resultSets = Try {
+      entries.foldLeft(List[ResultSet]()) { case (acc, entry) =>
+        val statement = connection.createStatement()
+        statement.execute(entry.sqlExpression)
+        val ret: List[ResultSet] = acc :+ statement.getResultSet
+        statement.close()
+        ret
+      }
+    } match {
+      case Success(resultSets) =>
+        connection.commit()
+        resultSets
+      case Failure(exception) =>
+        connection.rollback()
+        connection.close()
+        throw new Exception("Script execution failed", exception)
+    }
+
+    connection.setAutoCommit(autoCommitOriginalStatus)
+    resultSets
+  }
+
   def listFiles(pathString: String): List[Path] = {
     val path = Paths.get(pathString)
     val directory = path.getParent
@@ -48,6 +77,20 @@ object Ultet {
 
     println(dbConnection)
     yamls.foreach(x => println(x.toString))
+
+//
+//    implicit val connection: Connection = ???
+//    val entries: Seq[SQLEntry] = ???
+//    val resultSets = runTransaction(entries)
+//
+//    for ((resultSet, i) <- resultSets.zipWithIndex) {
+//      println(s"Results for query ${i + 1}:")
+//      while (resultSet.next()) {
+//        // assuming first column is an int and second column is a string for demonstration
+//        println(s"${resultSet.getInt(1)}, ${resultSet.getString(2)}")
+//      }
+//      resultSet.close()
+//    }
 
   }
 }
