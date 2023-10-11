@@ -16,4 +16,41 @@
 
 package za.co.absa.ultet.dbitems
 
-trait DBTableMember extends DBTablePart
+trait DBTableMember
+
+object DBTableMember {
+  case class DBTableIndex(
+                           indexName: String,
+                           tableName: String,
+                           indexBy: Seq[String],
+                           unique: Boolean = false,
+                           ascending: Boolean = true,
+                           nullsFirstOverride: Option[Boolean] = None,
+                           nullsDistinct: Boolean = true
+                         )
+    extends DBTableMember {
+
+    if (indexBy.map(_.toLowerCase).distinct.length
+
+    def nullsFirst: Boolean = {
+      nullsFirstOverride.getOrElse(!ascending)
+    }
+
+  }
+
+  case class DBTablePrimaryKey (
+                                 columns: Seq[String],
+                                 name: Option[String] = None
+                               )
+    extends DBTableMember
+
+  class DBTableColumn(
+                       columnName: String,
+                       dataType: String,
+                       notNull: Boolean,
+                       description: Option[String] = None,
+                       default: Option[String] = None
+                     )
+    extends DBTableMember
+}
+

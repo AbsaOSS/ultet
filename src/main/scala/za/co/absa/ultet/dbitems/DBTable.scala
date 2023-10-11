@@ -16,7 +16,10 @@
 
 package za.co.absa.ultet.dbitems
 
-case class DBTable (
+import za.co.absa.ultet.dbitems.DBTableMember._
+
+//TODO checks on validity of entries
+case class DBTable(
                    tableName: String,
                    description: Option[String],
                    primaryDBName: String,
@@ -24,8 +27,7 @@ case class DBTable (
                    columns: Seq[DBTableColumn] = Seq.empty,
                    primaryKey: Option[DBTablePrimaryKey] = None,
                    indexes: Seq[DBTableIndex] = Seq.empty
-                   )
-extends DBTablePart {
+                   ) {
   def addColumn(column: DBTableColumn): DBTable = {
     this.copy(columns = columns ++ Seq(column) )
   }
