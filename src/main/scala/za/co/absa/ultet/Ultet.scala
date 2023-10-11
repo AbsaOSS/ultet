@@ -16,14 +16,38 @@
 
 package za.co.absa.ultet
 
-object Ultet {
-  def main(args: Array[String]): Unit = {
-//    make executable
-//    do assembly
-//    read input
-//    write the input out
-//    die
+import scopt.OParser
+import za.co.absa.ultet.util.{CliParser, Config, DBProperties}
 
+import java.nio.file._
+import scala.collection.JavaConverters._
+
+object Ultet {
+  def listFiles(pathString: String): List[Path] = {
+    val path = Paths.get(pathString)
+    val directory = path.getParent
+    val matcher = FileSystems.getDefault.getPathMatcher(s"glob:*${path.getFileName}")
+
+    Files.list(directory)
+      .iterator()
+      .asScala
+      .filter(x => matcher.matches(x.getFileName))
+      .toList
+  }
+
+  def main(args: Array[String]): Unit = {
+    val config = OParser.parse(CliParser.parser, args, Config()) match {
+      case Some(config) => config
+      case _ => throw new Exception("Failed to load arguments")
+    }
+
+    val dbConnection: String = DBProperties
+      .loadProperties(config.dbConnectionPropertiesPath)
+      .generateConnectionString()
+    val yamls: List[Path] = listFiles(config.yamlSource)
+
+    println(dbConnection)
+    yamls.foreach(x => println(x.toString))
 
   }
 }
