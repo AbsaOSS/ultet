@@ -18,7 +18,7 @@ package za.co.absa.ultet.dbitems
 import za.co.absa.ultet.model.SQLEntry
 import za.co.absa.ultet.model.function.{FunctionBody, FunctionOwnership, FunctionGrant}
 
-case class DBItemFromSource(
+case class DBFunctionFromSource(
   fnName: String,
   paramTypes: Seq[String],
   owner: String,
