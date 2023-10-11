@@ -22,11 +22,11 @@ import za.co.absa.ultet.util.{CliParser, Config, DBProperties}
 
 import java.nio.file._
 import scala.collection.JavaConverters._
-import java.sql.{Connection, ResultSet}
+import java.sql.{Connection, DriverManager, ResultSet}
 import scala.util.{Failure, Success, Try}
 
 object Ultet {
-  def runTransaction(entries: Seq[SQLEntry])(implicit connection: Connection): Seq[ResultSet] = {
+  def runTransaction(connection: Connection, entries: Seq[SQLEntry]): Seq[ResultSet] = {
     val autoCommitOriginalStatus = connection.getAutoCommit
     connection.setAutoCommit(false)
 
@@ -70,27 +70,28 @@ object Ultet {
       case _ => throw new Exception("Failed to load arguments")
     }
 
-    val dbConnection: String = DBProperties
-      .loadProperties(config.dbConnectionPropertiesPath)
-      .generateConnectionString()
+    val dbProperties = DBProperties.loadProperties(config.dbConnectionPropertiesPath)
+    val dbConnection: String = dbProperties.generateConnectionString()
     val yamls: List[Path] = listFiles(config.yamlSource)
 
     println(dbConnection)
     yamls.foreach(x => println(x.toString))
 
-//
-//    implicit val connection: Connection = ???
-//    val entries: Seq[SQLEntry] = ???
-//    val resultSets = runTransaction(entries)
-//
-//    for ((resultSet, i) <- resultSets.zipWithIndex) {
-//      println(s"Results for query ${i + 1}:")
-//      while (resultSet.next()) {
-//        // assuming first column is an int and second column is a string for demonstration
-//        println(s"${resultSet.getInt(1)}, ${resultSet.getString(2)}")
-//      }
-//      resultSet.close()
-//    }
+
+    val connection: Connection = DriverManager.getConnection(dbConnection, dbProperties.user, dbProperties.password)
+    val entries: Seq[SQLEntry] = Seq.empty // TODO
+    val resultSets = runTransaction(connection, entries)
+
+    connection.close()
+
+    for ((resultSet, i) <- resultSets.zipWithIndex) {
+      println(s"Results for query ${i + 1}:")
+      while (resultSet.next()) {
+        // assuming first column is an int and second column is a string for demonstration
+        println(s"${resultSet.getInt(1)}, ${resultSet.getString(2)}")
+      }
+      resultSet.close()
+    }
 
   }
 }
