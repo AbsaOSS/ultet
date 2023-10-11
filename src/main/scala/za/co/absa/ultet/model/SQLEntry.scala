@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.dbitems
+package za.co.absa.ultet.model
 
-import za.co.absa.ultet.model.SQLEntry
-
-trait DBItem {
-  def sqlEntry: Seq[SQLEntry]
+trait SQLEntry {
+  def sqlExpression: String
+  def transactionGroup: String
+  def order: Int
 }

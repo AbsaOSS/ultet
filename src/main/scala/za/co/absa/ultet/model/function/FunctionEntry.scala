@@ -13,11 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-package za.co.absa.ultet.dbitems
+package za.co.absa.ultet.model.function
 
 import za.co.absa.ultet.model.SQLEntry
 
-trait DBItem {
-  def sqlEntry: Seq[SQLEntry]
+trait FunctionEntry extends SQLEntry {
+
 }
