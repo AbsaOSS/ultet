@@ -19,5 +19,5 @@ package za.co.absa.ultet.dbitems
 import za.co.absa.ultet.model.SQLEntry
 
 trait DBItem {
-  def sqlEntry: SQLEntry
+  def sqlEntry: Seq[SQLEntry]
 }
