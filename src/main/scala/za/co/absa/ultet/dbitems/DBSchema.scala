@@ -16,6 +16,8 @@
 
 package za.co.absa.ultet.dbitems
 
+import com.typesafe.scalalogging.Logger
+import za.co.absa.ultet.dbitems.DBSchema.{DO_NOT_CHOWN_SCHEMAS, DO_NOT_TOUCH_SCHEMAS, logger}
 import za.co.absa.ultet.model.{SQLEntry, SchemaName, UserName}
 import za.co.absa.ultet.model.schema.{SchemaCreate, SchemaGrant, SchemaOwner}
 
@@ -23,10 +25,29 @@ case class DBSchema(name: SchemaName,
                     ownerName: UserName,
                     users: Seq[UserName]) extends DBItem {
   override def sqlEntries: Seq[SQLEntry] = {
-    Seq(
-      SchemaCreate(name),
-      SchemaOwner(name, ownerName),
-      SchemaGrant(name, users)
-    )
+    if (DO_NOT_TOUCH_SCHEMAS.contains(name.value)) {
+      throw new Exception(s"Schema ${name.value} is not allow to be referenced")
+    }
+
+    if (DO_NOT_CHOWN_SCHEMAS.contains(name.value)){
+      logger.warn(s"Schema ${name.value} is not allowed to change owner")
+      Seq(
+        SchemaCreate(name),
+        SchemaGrant(name, users)
+      )
+    } else {
+      Seq(
+        SchemaCreate(name),
+        SchemaOwner(name, ownerName),
+        SchemaGrant(name, users)
+      )
+    }
   }
+}
+
+object DBSchema{
+  private val logger = Logger(getClass.getName)
+
+  val DO_NOT_TOUCH_SCHEMAS: Seq[String] = Seq("pg_toast", "pg_catalog", "information_schema")
+  val DO_NOT_CHOWN_SCHEMAS: Seq[String] = Seq("public")
 }
