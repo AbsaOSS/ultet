@@ -22,7 +22,6 @@ import za.co.absa.ultet.model.{DatabaseName, SQLEntry, SchemaName}
 import java.sql.Connection
 
 case class DBFunctionFromPG(
-                             database: DatabaseName,
                              schema: SchemaName,
                              fnName: FunctionName,
                              paramTypes: Seq[FunctionArgumentType]
@@ -32,7 +31,7 @@ case class DBFunctionFromPG(
 
 object DBFunctionFromPG {
 
-  def fetchAll(databaseName: DatabaseName, schemaName: SchemaName)
+  def fetchAll(schemaName: SchemaName)
               (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
     val query =
       s"""
@@ -64,7 +63,6 @@ object DBFunctionFromPG {
         .map(FunctionArgumentType)
 
       val dbFunctionFromPG = DBFunctionFromPG(
-        databaseName,
         schemaName,
         FunctionName(fnName),
         argumentTypes
