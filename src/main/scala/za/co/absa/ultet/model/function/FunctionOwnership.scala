@@ -35,5 +35,5 @@ case class FunctionOwnership(
 
   override def transactionGroup: TransactionGroup = ???
 
-  override def orderInTransaction: Int = 103
+  override def orderInTransaction: Int = 102
 }
