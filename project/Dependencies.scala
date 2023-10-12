@@ -24,6 +24,11 @@ object Dependencies {
     "com.typesafe" % "config" % "1.4.2",
     "ch.qos.logback" % "logback-classic" % "1.4.7",
     "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.postgresql" % "postgresql" % "42.6.0"
+    "org.postgresql" % "postgresql" % "42.6.0",
+    "io.circe" %% "circe-yaml" % "0.14.2",
+    "io.circe" %% "circe-core" % "0.14.2",
+    "io.circe" %% "circe-generic" % "0.14.2",
+    "io.circe" %% "circe-parser" % "0.14.2",
+    "io.circe" %% "circe-generic-extras" % "0.14.2"
   )
 }
