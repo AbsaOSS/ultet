@@ -17,13 +17,12 @@
 package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.dbitems.DBTableMember._
-import za.co.absa.ultet.model.table.TableName
+import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableCreation, TableEntry, TableName}
 import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 import za.co.absa.ultet.model.table.index.{TableIndexCreate, TableIndexDrop}
-import za.co.absa.ultet.model.table.alterations.{TableColumnNotNullDrop, TableColumnDefaultSet, TablePrimaryKeyAdd, TablePrimaryKeyDrop, TableColumnDefaultDrop, TableColumnCommentDrop, TableColumnCommentSet}
+import za.co.absa.ultet.model.table.alterations.{TableColumnCommentDrop, TableColumnCommentSet, TableColumnDefaultDrop, TableColumnDefaultSet, TableColumnNotNullDrop, TablePrimaryKeyAdd, TablePrimaryKeyDrop}
 import za.co.absa.ultet.model.table.column.{TableColumnAdd, TableColumnDrop}
-import za.co.absa.ultet.model.table.{TableAlteration, TableCreation, TableEntry, TableName}
-import za.co.absa.ultet.model.{ColumnName, DatabaseName, SchemaName, UserName}
+import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 import DBTable.ColumnsDifferenceResolver
 
 import java.sql.Connection
@@ -171,9 +170,6 @@ object DBTable {
     }
 
   }
-}
-
-object DBTable {
   def createFromPG(schemaName: SchemaName, tableName: TableName, databaseName: DatabaseName)
                   (implicit jdbcConnection: Option[Connection]): Option[DBTable] = {
     jdbcConnection.flatMap { dbConnection =>

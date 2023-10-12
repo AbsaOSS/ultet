@@ -6,7 +6,7 @@ import io.circe.{yaml, Error}
 import za.co.absa.ultet.dbitems.DBTable
 import za.co.absa.ultet.dbitems.DBTableMember.{DBTableColumn, DBTableIndex, DBTablePrimaryKey}
 import za.co.absa.ultet.model._
-import za.co.absa.ultet.model.table.TableName
+import za.co.absa.ultet.model.table.{TableName, ColumnName}
 
 import java.net.URI
 import java.nio.file.{Files, Paths}
@@ -103,9 +103,9 @@ object PgTableFileParser {
       val semiPreparedTable = DBTable(
         TableName(schemaAndTbl(1)),
         SchemaName(schemaAndTbl(0)),
-        description,
         DatabaseName(primaryDBName),
-        UserName(owner)
+        UserName(owner),
+        description
       )
 
       val withColumns = prepareColumns.foldLeft(semiPreparedTable) { case (acc, preparedColumn) =>
