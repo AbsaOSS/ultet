@@ -24,12 +24,12 @@ case class PgTableFileParser() {
     processedYaml
   }
 
-  def parseFileYaml(fileUri: URI): DBTableFromYaml = {
+  def parseFileYaml(fileUri: URI): DBTable = {
     val path = Paths.get(fileUri)
     val lines = Files.lines(path)
     val content = lines.collect(Collectors.joining("\n"))
 
-    parseContentYaml(content)
+    parseContentYaml(content).convertToDBTable
   }
 
 }
