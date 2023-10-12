@@ -15,12 +15,10 @@
  */
 package za.co.absa.ultet.model.table.index
 
-import za.co.absa.ultet.model
+import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-case class TableIndexDrop(tableName: TableName, indexName: String) extends TableAlteration {
-  override def schemaName: model.SchemaName = ???
-
+case class TableIndexDrop(schemaName: SchemaName, tableName: TableName, indexName: String) extends TableAlteration {
   override def sqlExpression: String = {
     s"""DROP INDEX $indexName;"""
   }

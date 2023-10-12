@@ -17,11 +17,10 @@ package za.co.absa.ultet.model.table.column
 
 import za.co.absa.ultet.dbitems.DBTableMember.DBTableColumn
 import za.co.absa.ultet.model
+import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-case class TableColumnAdd(tableName: TableName, tableColumn: DBTableColumn) extends TableAlteration {
-
-  override def schemaName: model.SchemaName = ???
+case class TableColumnAdd(schemaName: SchemaName, tableName: TableName, tableColumn: DBTableColumn) extends TableAlteration {
 
   override def sqlExpression: String = {
     val default = tableColumn.default.map(value => s" DEFAULT $value").getOrElse("")

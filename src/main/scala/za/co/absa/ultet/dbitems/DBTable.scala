@@ -66,7 +66,7 @@ case class DBTable(
     assert(tableName == other.tableName, s"Table names must match to diff tables, but $tableName != ${other.tableName}")
 
     val removeIndices = this.indexes.filterNot(other.indexes.contains)
-    val alterationsToRemoveIndices = removeIndices.map(idx => TableIndexDrop(tableName, idx.tableName))
+    val alterationsToRemoveIndices = removeIndices.map(idx => TableIndexDrop(schemaName, tableName, idx.tableName))
 
     val addIndices = other.indexes.filterNot(this.indexes.contains)
     val alterationsToAddIndices = addIndices.map(idx => TableIndexCreate(schemaName, idx))
@@ -120,7 +120,7 @@ object DBTable {
     }
 
     def alterationsForColumnAdditions: Seq[TableAlteration] = {
-      columnsToAdd.map(col => TableColumnAdd(tableName, col))
+      columnsToAdd.map(col => TableColumnAdd(schemaName, tableName, col))
     }
 
     def alterationsForColumnRemovals: Seq[TableAlteration] = {
