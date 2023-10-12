@@ -18,10 +18,11 @@ package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.dbitems.DBTableMember._
 import za.co.absa.ultet.model.table.index.{TableIndexCreate, TableIndexDrop}
-import za.co.absa.ultet.model.table.constraint.{TablePrimaryKeyDrop, TablePrimaryKeyAdd}
-import za.co.absa.ultet.model.table.column.{TableColumnDrop, TableColumnAdd}
-import za.co.absa.ultet.model.table.{TableCreation, TableEntry, TableName}
-import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
+import za.co.absa.ultet.model.table.alterations.{TableColumnNotNullDrop, TableColumnDefaultSet, TablePrimaryKeyAdd, TablePrimaryKeyDrop, TableColumnDefaultDrop}
+import za.co.absa.ultet.model.table.column.{TableColumnAdd, TableColumnDrop}
+import za.co.absa.ultet.model.table.{TableAlteration, TableCreation, TableEntry, TableName}
+import za.co.absa.ultet.model.{ColumnName, DatabaseName, SchemaName, UserName}
+import DBTable.ColumnsDifferenceResolver
 
 //TODO checks on validity of entries
 case class DBTable(
@@ -54,21 +55,17 @@ case class DBTable(
   }
 
   def -(other: DBTable): Seq[TableEntry] = {
-    // TODO redo:
-    // description change: ok
-    // name: drop
-    // datatype: ok + todo
-    // not null -> to false ok, to true -> throw exception
-    // default -> ok
-    val removeColumns = this.columns.filterNot(other.columns.contains) // remove those that are not found in other.columns
-    val addColumns = other.columns.filterNot(this.columns.contains) // add those that are not found in this.columns
+    assert(tableName == other.tableName, s"Table names must match to diff tables, but $tableName != ${other.tableName}")
 
     val removeIndices = this.indexes.filterNot(other.indexes.contains)
-    val addIndices = other.indexes.filterNot(this.indexes.contains)
+    val alterationsToRemoveIndices = removeIndices.map(idx => TableIndexDrop(tableName, idx.tableName))
 
-    val pkEntries = (this.primaryKey, other.primaryKey) match {
+    val addIndices = other.indexes.filterNot(this.indexes.contains)
+    val alterationsToAddIndices = addIndices.map(idx => TableIndexCreate(idx))
+
+    val pkEntries: Seq[TableAlteration] = (this.primaryKey, other.primaryKey) match {
       case (x, y) if x == y => Seq.empty
-      case (Some(existingPk), Some(newPk)) => Seq (
+      case (Some(existingPk), Some(newPk)) => Seq(
         TablePrimaryKeyDrop(tableName, existingPk),
         TablePrimaryKeyAdd(tableName, newPk)
       )
@@ -77,13 +74,84 @@ case class DBTable(
     }
 
     // todo alter description?
-    // todo alter owner
 
-    removeIndices.map(idx => TableIndexDrop(tableName, idx.tableName)) ++
-    removeColumns.map(col => TableColumnDrop(tableName, col.columnName)) ++
-    pkEntries ++
-    addColumns.map(col => TableColumnAdd(tableName, col)) ++
-    addIndices.map(idx => TableIndexCreate(idx))
+    val diffResolver = ColumnsDifferenceResolver(tableName)(columns, other.columns)
+
+    diffResolver.alterationsForCommonColumns ++
+      alterationsToRemoveIndices ++
+      diffResolver.alterationsForColumnRemovals ++
+      pkEntries ++
+      diffResolver.alterationsForColumnAdditions ++
+      alterationsToAddIndices
   }
+}
 
+object DBTable {
+  case class ColumnsDifferenceResolver(tableName: TableName)(thisColumns: Seq[DBTableColumn], otherColumns: Seq[DBTableColumn]) {
+    val thisColumnNames = thisColumns.map(_.columnName)
+    val otherColumnNames = otherColumns.map(_.columnName)
+
+    val columnNamesToRemove: Set[ColumnName] = {
+      thisColumnNames.filterNot(otherColumnNames.contains).toSet // remove those that are not found in other.columns
+    }
+    val columnNamesToAdd: Seq[ColumnName] = otherColumnNames.filterNot(thisColumnNames.contains) // add those that are not found in this.columns
+
+    val commonColumnNames = thisColumnNames.toSet ++ otherColumnNames.toSet -- columnNamesToRemove -- columnNamesToAdd
+
+    def columnsToAdd: Seq[DBTableColumn] = otherColumns.filter(col => columnNamesToAdd.contains(col.columnName))
+
+    def columnsToRemove: Set[DBTableColumn] = thisColumns.filter(col => columnNamesToRemove.contains(col.columnName)).toSet
+
+    def commonColumns: Set[(DBTableColumn, DBTableColumn)] = {
+      commonColumnNames.map { commonName =>
+        val tCol = thisColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${tableName.value}"))
+        val oCol = otherColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${tableName.value}"))
+
+        (tCol, oCol)
+      }
+    }
+
+    def alterationsForColumnAdditions: Seq[TableAlteration] = {
+      columnsToAdd.map(col => TableColumnAdd(tableName, col))
+    }
+
+    def alterationsForColumnRemovals: Seq[TableAlteration] = {
+      columnsToRemove.map(col => TableColumnDrop(tableName, col.columnName)).toSeq
+    }
+
+    def alterationsForCommonColumns: Seq[TableAlteration] = {
+      commonColumns.flatMap { case (thisCol, thatCol) =>
+        generateAlterForDataTypeChange(thisCol, thatCol) ++
+          generateAlterForNotNullChange(thisCol, thatCol) ++
+          generateAlterForDescriptionChange(thisCol, thatCol) ++
+          generateAlterForDefaultChange(thisCol, thatCol)
+      }.toSeq
+    }
+
+    def generateAlterForDataTypeChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
+      // todo for very specific datatype changes only? from/to String, numerics?
+      throw new IllegalStateException(s"Cannot change datatype of ${thisCol.columnName.value} from ${thisCol.dataType} to ${otherCol.dataType} ")
+    }
+
+    def generateAlterForNotNullChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
+      (thisCol.notNull, otherCol.notNull) match {
+        case (t, o) if t == o => Seq.empty // no change
+        case (true, false) => Seq(TableColumnNotNullDrop(tableName, otherCol.columnName))
+        case (false, true) => throw new IllegalStateException(s"Cannot change [null] to [not null] for ${thisCol.columnName.value} for table ${tableName.value} ")
+      }
+    }
+
+    def generateAlterForDescriptionChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
+      Seq.empty // todo change comment
+    }
+
+    def generateAlterForDefaultChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
+      (thisCol.default, otherCol.default) match {
+        case (t, o) if t == o => Seq.empty // no change
+        case (Some(t), None) => Seq(TableColumnDefaultDrop(tableName, thisCol.columnName))
+        case (_, Some(o)) => Seq(TableColumnDefaultSet(tableName, otherCol.columnName, o)) // both add/set
+      }
+    }
+
+  }
 }

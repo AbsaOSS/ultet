@@ -13,27 +13,19 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.table.constraint
+package za.co.absa.ultet.model.table.alterations
 
-import za.co.absa.ultet.dbitems.DBTableMember.{DBTableIndex, DBTablePrimaryKey}
 import za.co.absa.ultet.model
+import za.co.absa.ultet.model.ColumnName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-case class TablePrimaryKeyAdd(tableName: TableName, primaryKey: DBTablePrimaryKey) extends TableAlteration {
-override def schemaName: model.SchemaName = ???
+case class TableColumnDefaultSet(tableName: TableName, columnName: ColumnName, default: String) extends TableAlteration {
+  override def schemaName: model.SchemaName = ???
 
   override def sqlExpression: String = {
-    val pkName = primaryKey.name.getOrElse {
-      val underscored = primaryKey.columns.map(_.value).mkString("_")
-      s"${underscored}_pk"
-    }
-
-    val commadColumnNames = primaryKey.columns.map(_.value).mkString(", ")
-
     s"""ALTER TABLE ${tableName.value}
-       |ADD CONSTRAINT $pkName
-       |PRIMARY KEY ($commadColumnNames);""".stripMargin
+       |ALTER COLUMN ${columnName.value} SET DEFAULT $default;""".stripMargin
   }
 
-  override def orderInTransaction: Int = 271
+  override def orderInTransaction: Int = 250
 }
