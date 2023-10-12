@@ -6,6 +6,7 @@ import io.circe.{yaml, Error}
 import za.co.absa.ultet.dbitems.DBTable
 import za.co.absa.ultet.dbitems.DBTableMember.{DBTableColumn, DBTableIndex, DBTablePrimaryKey}
 import za.co.absa.ultet.model._
+import za.co.absa.ultet.model.table.TableName
 
 import java.net.URI
 import java.nio.file.{Files, Paths}

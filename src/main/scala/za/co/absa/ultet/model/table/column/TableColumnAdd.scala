@@ -13,27 +13,24 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.table
-import za.co.absa.ultet.dbitems.DBTableMember.{DBTableColumn, DBTableIndex, DBTablePrimaryKey}
-import za.co.absa.ultet.model.SchemaName
+package za.co.absa.ultet.model.table.column
 
-case class TableCreation(
-  schemaName: SchemaName,
-  tableName: TableName,
-  columns: Seq[DBTableColumn],
-) extends TableEntry {
+import za.co.absa.ultet.dbitems.DBTableMember.DBTableColumn
+import za.co.absa.ultet.model
+import za.co.absa.ultet.model.SchemaName
+import za.co.absa.ultet.model.table.{TableAlteration, TableName}
+
+case class TableColumnAdd(schemaName: SchemaName, tableName: TableName, tableColumn: DBTableColumn) extends TableAlteration {
 
   override def sqlExpression: String = {
-    val columnLines = columns.map { col =>
-      val notNull = if(col.notNull)" NOT NULL" else ""
-      val default = col.default.map(cDef =>s" DEFAULT $cDef").getOrElse("")
-      s"${col.columnName.value} ${col.dataType}$notNull$default"
-    }
+    val default = tableColumn.default.map(value => s" DEFAULT $value").getOrElse("")
+    val notNull = if (tableColumn.notNull) " NOT NULL" else ""
+    // todo description?
 
-    s"""CREATE TABLE ${schemaName.value}.${tableName.value}(
-       |${columnLines.mkString(",\n")}
-       |);""".stripMargin
+    s"""ALTER TABLE $tableName
+    | ADD ${tableColumn.columnName} ${tableColumn.dataType}$default$notNull
+    | ;""".stripMargin
   }
 
-  override def orderInTransaction: Int = 200
+  override def orderInTransaction: Int = 210
 }
