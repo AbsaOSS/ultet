@@ -15,13 +15,11 @@
  */
 package za.co.absa.ultet.model.table.alterations
 
-import za.co.absa.ultet.dbitems.DBTableMember.{DBTableIndex, DBTablePrimaryKey}
-import za.co.absa.ultet.model
+import za.co.absa.ultet.dbitems.DBTableMember.DBTablePrimaryKey
+import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-case class TablePrimaryKeyAdd(tableName: TableName, primaryKey: DBTablePrimaryKey) extends TableAlteration {
-override def schemaName: model.SchemaName = ???
-
+case class TablePrimaryKeyAdd(schemaName: SchemaName, tableName: TableName, primaryKey: DBTablePrimaryKey) extends TableAlteration {
   override def sqlExpression: String = {
     val pkName = primaryKey.name.getOrElse {
       val underscored = primaryKey.columns.map(_.value).mkString("_")
@@ -30,7 +28,7 @@ override def schemaName: model.SchemaName = ???
 
     val commadColumnNames = primaryKey.columns.map(_.value).mkString(", ")
 
-    s"""ALTER TABLE ${tableName.value}
+    s"""ALTER TABLE ${schemaName.value}.${tableName.value}
        |ADD CONSTRAINT $pkName
        |PRIMARY KEY ($commadColumnNames);""".stripMargin
   }

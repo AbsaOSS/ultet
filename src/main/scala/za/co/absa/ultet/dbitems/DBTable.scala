@@ -50,8 +50,8 @@ case class DBTable(
   def -(other: Option[DBTable]): Seq[TableEntry] = {
     other match {
       case None => {
-        val pkCreateAlteration: Option[TableAlteration] = primaryKey.map(definedPk => TablePrimaryKeyAdd(tableName, definedPk))
-        val indicesCreateAlterations = indexes.map(idx => TableIndexCreate(idx))
+        val pkCreateAlteration: Option[TableAlteration] = primaryKey.map(definedPk => TablePrimaryKeyAdd(schemaName, tableName, definedPk))
+        val indicesCreateAlterations = indexes.map(idx => TableIndexCreate(schemaName, idx))
 
         Seq(TableCreation(schemaName, tableName, columns)) ++
           pkCreateAlteration.toSeq ++
@@ -69,21 +69,21 @@ case class DBTable(
     val alterationsToRemoveIndices = removeIndices.map(idx => TableIndexDrop(tableName, idx.tableName))
 
     val addIndices = other.indexes.filterNot(this.indexes.contains)
-    val alterationsToAddIndices = addIndices.map(idx => TableIndexCreate(idx))
+    val alterationsToAddIndices = addIndices.map(idx => TableIndexCreate(schemaName, idx))
 
     val pkEntries: Seq[TableAlteration] = (this.primaryKey, other.primaryKey) match {
       case (x, y) if x == y => Seq.empty
       case (Some(existingPk), Some(newPk)) => Seq(
-        TablePrimaryKeyDrop(tableName, existingPk),
-        TablePrimaryKeyAdd(tableName, newPk)
+        TablePrimaryKeyDrop(schemaName, tableName, existingPk),
+        TablePrimaryKeyAdd(schemaName, tableName, newPk)
       )
-      case (None, Some(newPk)) => Seq(TablePrimaryKeyAdd(tableName, newPk))
-      case (Some(existingPk), None) => Seq(TablePrimaryKeyDrop(tableName, existingPk))
+      case (None, Some(newPk)) => Seq(TablePrimaryKeyAdd(schemaName, tableName, newPk))
+      case (Some(existingPk), None) => Seq(TablePrimaryKeyDrop(schemaName, tableName, existingPk))
     }
 
     // todo alter description?
 
-    val diffResolver = ColumnsDifferenceResolver(tableName)(columns, other.columns)
+    val diffResolver = ColumnsDifferenceResolver(schemaName, tableName)(columns, other.columns)
 
     diffResolver.alterationsForCommonColumns ++
       alterationsToRemoveIndices ++
@@ -95,7 +95,7 @@ case class DBTable(
 }
 
 object DBTable {
-  case class ColumnsDifferenceResolver(tableName: TableName)(thisColumns: Seq[DBTableColumn], otherColumns: Seq[DBTableColumn]) {
+  case class ColumnsDifferenceResolver(schemaName: SchemaName, tableName: TableName)(thisColumns: Seq[DBTableColumn], otherColumns: Seq[DBTableColumn]) {
     private[dbitems] val thisColumnNames = thisColumns.map(_.columnName)
     private[dbitems] val otherColumnNames = otherColumns.map(_.columnName)
 
@@ -112,8 +112,8 @@ object DBTable {
 
     private[dbitems] def commonColumns: Set[(DBTableColumn, DBTableColumn)] = {
       commonColumnNames.map { commonName =>
-        val tCol = thisColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${tableName.value}"))
-        val oCol = otherColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${tableName.value}"))
+        val tCol = thisColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${schemaName.value}.${tableName.value}"))
+        val oCol = otherColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${schemaName.value}.${tableName.value}"))
 
         (tCol, oCol)
       }
@@ -124,7 +124,7 @@ object DBTable {
     }
 
     def alterationsForColumnRemovals: Seq[TableAlteration] = {
-      columnsToRemove.map(col => TableColumnDrop(tableName, col.columnName)).toSeq
+      columnsToRemove.map(col => TableColumnDrop(schemaName, tableName, col.columnName)).toSeq
     }
 
     def alterationsForCommonColumns: Seq[TableAlteration] = {
@@ -144,8 +144,8 @@ object DBTable {
     private def generateAlterForNotNullChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
       (thisCol.notNull, otherCol.notNull) match {
         case (t, o) if t == o => Seq.empty // no change
-        case (true, false) => Seq(TableColumnNotNullDrop(tableName, otherCol.columnName))
-        case (false, true) => throw new IllegalStateException(s"Cannot change [null] to [not null] for ${thisCol.columnName.value} for table ${tableName.value} ")
+        case (true, false) => Seq(TableColumnNotNullDrop(schemaName, tableName, otherCol.columnName))
+        case (false, true) => throw new IllegalStateException(s"Cannot change [null] to [not null] for ${thisCol.columnName.value} for table ${schemaName.value}.${tableName.value} ")
       }
     }
 
@@ -156,8 +156,8 @@ object DBTable {
     private def generateAlterForDefaultChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
       (thisCol.default, otherCol.default) match {
         case (t, o) if t == o => Seq.empty // no change
-        case (Some(t), None) => Seq(TableColumnDefaultDrop(tableName, thisCol.columnName))
-        case (_, Some(o)) => Seq(TableColumnDefaultSet(tableName, otherCol.columnName, o)) // both add/set
+        case (Some(t), None) => Seq(TableColumnDefaultDrop(schemaName, tableName, thisCol.columnName))
+        case (_, Some(o)) => Seq(TableColumnDefaultSet(schemaName, tableName, otherCol.columnName, o)) // both add/set
       }
     }
 

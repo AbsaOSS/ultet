@@ -16,14 +16,12 @@
 package za.co.absa.ultet.model.table.alterations
 
 import za.co.absa.ultet.dbitems.DBTableMember.DBTablePrimaryKey
-import za.co.absa.ultet.model
+import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-case class TablePrimaryKeyDrop(tableName: TableName, primaryKey: DBTablePrimaryKey) extends TableAlteration {
-  override def schemaName: model.SchemaName = ???
-
+case class TablePrimaryKeyDrop(schemaName: SchemaName, tableName: TableName, primaryKey: DBTablePrimaryKey) extends TableAlteration {
   override def sqlExpression: String = {
-    s"""ALTER TABLE ${tableName.value}
+    s"""ALTER TABLE ${schemaName.value}.${tableName.value}
        |DROP CONSTRAINT ${primaryKey.name};""".stripMargin
   }
 

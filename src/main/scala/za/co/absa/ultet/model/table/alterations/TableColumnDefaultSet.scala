@@ -15,15 +15,12 @@
  */
 package za.co.absa.ultet.model.table.alterations
 
-import za.co.absa.ultet.model
-import za.co.absa.ultet.model.ColumnName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
+import za.co.absa.ultet.model.{ColumnName, SchemaName}
 
-case class TableColumnDefaultSet(tableName: TableName, columnName: ColumnName, default: String) extends TableAlteration {
-  override def schemaName: model.SchemaName = ???
-
+case class TableColumnDefaultSet(schemaName: SchemaName, tableName: TableName, columnName: ColumnName, default: String) extends TableAlteration {
   override def sqlExpression: String = {
-    s"""ALTER TABLE ${tableName.value}
+    s"""ALTER TABLE ${schemaName.value}.${tableName.value}
        |ALTER COLUMN ${columnName.value} SET DEFAULT $default;""".stripMargin
   }
 

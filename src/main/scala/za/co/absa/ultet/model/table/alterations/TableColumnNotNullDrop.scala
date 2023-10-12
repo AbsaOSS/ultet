@@ -16,14 +16,12 @@
 package za.co.absa.ultet.model.table.alterations
 
 import za.co.absa.ultet.model
-import za.co.absa.ultet.model.ColumnName
+import za.co.absa.ultet.model.{ColumnName, SchemaName}
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-case class TableColumnNotNullDrop(tableName: TableName, columnName: ColumnName) extends TableAlteration {
-  override def schemaName: model.SchemaName = ???
-
+case class TableColumnNotNullDrop(schemaName: SchemaName, tableName: TableName, columnName: ColumnName) extends TableAlteration {
   override def sqlExpression: String = {
-    s"""ALTER TABLE ${tableName.value}
+    s"""ALTER TABLE ${schemaName.value}.${tableName.value}
        |ALTER COLUMN ${columnName.value} DROP NOT NULL;""".stripMargin
   }
 

@@ -16,13 +16,12 @@
 package za.co.absa.ultet.model.table.index
 
 import za.co.absa.ultet.dbitems.DBTableMember.DBTableIndex
-import za.co.absa.ultet.model
+import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-case class TableIndexCreate(tableIndex: DBTableIndex) extends TableAlteration {
+case class TableIndexCreate(schemaName: SchemaName, tableIndex: DBTableIndex) extends TableAlteration {
 
   override def tableName: TableName = TableName(tableIndex.tableName)
-  override def schemaName: model.SchemaName = ???
 
   override def sqlExpression: String = {
     val unique = if(tableIndex.unique) " UNIQUE" else ""
@@ -35,7 +34,7 @@ case class TableIndexCreate(tableIndex: DBTableIndex) extends TableAlteration {
 
     val nullsDistinct = if (tableIndex.nullsDistinct) "NULLS NOT DISTINCT" else "NULLS DISTINCT"
 
-      s"""CREATE$unique INDEX ${tableIndex.indexName} ON ${tableName.value} ($columns) $nullsDistinct;"""
+      s"""CREATE$unique INDEX ${tableIndex.indexName} ON ${schemaName.value}.${tableName.value} ($columns) $nullsDistinct;"""
   }
 
   override def orderInTransaction: Int = 270
