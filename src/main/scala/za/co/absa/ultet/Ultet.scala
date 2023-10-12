@@ -22,6 +22,7 @@ import za.co.absa.ultet.dbitems.DBItem
 import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup}
 import za.co.absa.ultet.util.{CliParser, Config, DBProperties}
 
+import java.net.URI
 import java.nio.file._
 import scala.collection.JavaConverters._
 import java.sql.{Connection, DriverManager, ResultSet}
@@ -30,8 +31,8 @@ import scala.util.{Failure, Success, Try}
 object Ultet {
   private val logger = Logger(getClass.getName)
 
-  private def extractSQLEntries(dbItems: Seq[DBItem]): Seq[SQLEntry] = {
-    dbItems.flatMap { item => item.sqlEntries }
+  private def extractSQLEntries(dbItems: Set[DBItem]): Seq[SQLEntry] = {
+    dbItems.toSeq.flatMap { item => item.sqlEntries }
   }
 
   private def runEntries(entries: Seq[SQLEntry])(implicit connection: Connection): Unit = {
@@ -79,13 +80,18 @@ object Ultet {
       .mapValues(_.sortBy(_.orderInTransaction))
   }
 
-  def listFiles(pathString: String): List[Path] = {
-    val path = Paths.get(pathString)
+  private def listChildPaths(path: Path): List[Path] = Files.list(path)
+    .iterator()
+    .asScala
+    .toList
 
-    Files.list(path)
-      .iterator()
-      .asScala
-      .toList
+  def listFileURIsPerSchema(pathString: String): Map[SchemaName, List[URI]] = {
+    val path = Paths.get(pathString)
+    val schemaPaths = listChildPaths(path)
+    schemaPaths
+      .map(p => SchemaName(p.getFileName.toString) -> listChildPaths(p))
+      .toMap
+      .mapValues(_.map(_.toUri))
   }
 
   def main(args: Array[String]): Unit = {
@@ -101,17 +107,9 @@ object Ultet {
       dbConnection, dbProperties.user, dbProperties.password
     )
 
-    val sourcePaths: List[Path] = listFiles(config.sourceFilesRootPath)
-    val sourcePathsPerSchema = sourcePaths.groupBy { path =>
-      val schemaName = path.getParent.getFileName.toString
-      SchemaName(schemaName)
-    }
-    val sourceURIsPerSchema = sourcePathsPerSchema.mapValues(_.map(_.toUri))
+    val sourceURIsPerSchema: Map[SchemaName, List[URI]] = listFileURIsPerSchema(config.sourceFilesRootPath)
 
-    println(dbConnection)
-    sourcePaths.foreach(x => println(x.toString))
-
-    val dbItems: Seq[DBItem] = DBItem.createDBItems(sourceURIsPerSchema)
+    val dbItems: Set[DBItem] = DBItem.createDBItems(sourceURIsPerSchema)
     val entries: Seq[SQLEntry] = extractSQLEntries(dbItems)
     val orderedEntries = sortEntries(entries)
     val databaseEntries = orderedEntries.getOrElse(TransactionGroup.Databases, Seq.empty)
