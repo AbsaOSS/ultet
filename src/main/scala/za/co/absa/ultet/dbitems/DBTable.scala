@@ -21,7 +21,7 @@ import za.co.absa.ultet.model.table.index.{TableIndexCreate, TableIndexDrop}
 import za.co.absa.ultet.model.table.alterations.{TableColumnNotNullDrop, TableColumnDefaultSet, TablePrimaryKeyAdd, TablePrimaryKeyDrop, TableColumnDefaultDrop}
 import za.co.absa.ultet.model.table.column.{TableColumnAdd, TableColumnDrop}
 import za.co.absa.ultet.model.table.{TableAlteration, TableCreation, TableEntry, TableName}
-import za.co.absa.ultet.model.{ColumnName, DatabaseName, SchemaName, UserName, TableName}
+import za.co.absa.ultet.model.{ColumnName, DatabaseName, SchemaName, UserName}
 import DBTable.ColumnsDifferenceResolver
 
 //TODO checks on validity of entries

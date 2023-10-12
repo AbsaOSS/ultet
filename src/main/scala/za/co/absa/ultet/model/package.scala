@@ -30,8 +30,6 @@ package object model {
 
   case class ColumnName(value: String) extends DBObjectName(value)
 
-  case class TableName(value: String) extends DBObjectName(value)
-
   case class IndexName(value: String) extends DBObjectName(value)
 
   case class PrimaryKeyName(value: String) extends DBObjectName(value)
