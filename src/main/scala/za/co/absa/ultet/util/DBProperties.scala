@@ -90,9 +90,9 @@ object DBProperties {
     }.toMap
 
     (protocol, subprotocol) match {
-      case (Some(p), Some(s)) => DBProperties(serverName, database, portNumber, properties, p, s)
-      case (_, Some(s)) => DBProperties(serverName, database, portNumber, properties, subprotocol = s)
-      case (_,_) => DBProperties(serverName, database, portNumber, properties)
+      case (Some(p), Some(s)) => DBProperties(serverName, database, portNumber, properties, user, password, p, s)
+      case (_, Some(s)) => DBProperties(serverName, database, portNumber, properties, user, password, subprotocol = s)
+      case (_,_) => DBProperties(serverName, database, portNumber, properties, user, password)
     }
   }
 }
