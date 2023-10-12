@@ -18,6 +18,7 @@ package za.co.absa.ultet
 
 import com.typesafe.scalalogging.Logger
 import scopt.OParser
+import za.co.absa.ultet.dbitems.DBItem
 import za.co.absa.ultet.model.{SQLEntry, TransactionGroup}
 import za.co.absa.ultet.util.{CliParser, Config, DBProperties}
 
@@ -28,6 +29,10 @@ import scala.util.{Failure, Success, Try}
 
 object Ultet {
   private val logger = Logger(getClass.getName)
+
+  private def extractSQLEntries(dbItems: Seq[DBItem]): Seq[SQLEntry] = {
+    dbItems.flatMap { item => item.sqlEntries }
+  }
 
   private def runEntries(dbProperties: DBProperties, dbConnection: String, entries: Seq[SQLEntry]): Unit = {
     val connection: Connection = DriverManager.getConnection(dbConnection, dbProperties.user, dbProperties.password)
@@ -102,7 +107,8 @@ object Ultet {
     println(dbConnection)
     yamls.foreach(x => println(x.toString))
 
-    val entries: Seq[SQLEntry] = Seq.empty // TODO
+    val dbItems: Seq[DBItem] =  Seq.empty[DBItem] // TODO
+    val entries: Seq[SQLEntry] = extractSQLEntries(dbItems)
     val orderedEntries = sortEntries(entries)
     val databaseEntrries = orderedEntries.getOrElse(TransactionGroup.Databases, Seq.empty)
     val roleEntrries = orderedEntries.getOrElse(TransactionGroup.Roles, Seq.empty)
