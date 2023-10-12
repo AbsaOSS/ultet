@@ -67,7 +67,7 @@ object PgTableFileParser {
             currIndex("indexName"),
             currIndex("tableName"),
             currIndex("indexBy")
-              .replaceAll("^\\[|\\]$", "")
+              .replaceAll("""^\[|\]$""", "")
               .split(",")
               .map(_.trim),
             // todo better all this
@@ -87,7 +87,7 @@ object PgTableFileParser {
           val pkName = primaryKey.get("name")
 
           val preparedPk = DBTablePrimaryKey(
-            cols.replaceAll("^\\[|\\]$", "")
+            cols.replaceAll("""^\[|\]$""", "")
               .split(",")
               .map(currColName => ColumnName(currColName.trim)),
             Some(pkName)
