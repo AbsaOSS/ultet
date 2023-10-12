@@ -15,9 +15,8 @@
  */
 package za.co.absa.ultet.model.table.alterations
 
-import za.co.absa.ultet.model
-import za.co.absa.ultet.model.{ColumnName, SchemaName}
-import za.co.absa.ultet.model.table.{TableAlteration, TableName}
+import za.co.absa.ultet.model.SchemaName
+import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableName}
 
 case class TableColumnNotNullDrop(schemaName: SchemaName, tableName: TableName, columnName: ColumnName) extends TableAlteration {
   override def sqlExpression: String = {

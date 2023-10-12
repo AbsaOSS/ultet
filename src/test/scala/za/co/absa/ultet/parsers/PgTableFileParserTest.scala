@@ -5,6 +5,7 @@ import org.scalatest.matchers.should.Matchers
 import za.co.absa.ultet.dbitems.DBTable
 import za.co.absa.ultet.dbitems.DBTableMember._
 import za.co.absa.ultet.model._
+import za.co.absa.ultet.model.table.{TableName, ColumnName}
 import za.co.absa.ultet.parsers.PgTableFileParser.DBTableFromYaml
 
 class PgTableFileParserTest extends AnyFlatSpec with Matchers {

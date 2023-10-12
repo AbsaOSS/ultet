@@ -18,7 +18,7 @@ package za.co.absa.ultet.model
 
 package object function {
 
-  case class FunctionName(value: String) extends AnyVal
-  case class FunctionArgumentType(value: String) extends AnyVal
+  case class FunctionName(value: String) extends DBObjectName(value)
+  case class FunctionArgumentType(value: String) extends DBObjectName(value)
 
 }

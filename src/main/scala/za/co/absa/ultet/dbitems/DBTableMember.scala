@@ -16,7 +16,7 @@
 
 package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.model.ColumnName
+import za.co.absa.ultet.model.table.ColumnName
 
 trait DBTableMember
 
@@ -46,12 +46,12 @@ object DBTableMember {
     extends DBTableMember
 
   case class DBTableColumn(
-                       columnName: ColumnName,
-                       dataType: String,
-                       notNull: Boolean,
-                       description: Option[String] = None,
-                       default: Option[String] = None
-                     )
+                            columnName: ColumnName,
+                            dataType: String,
+                            notNull: Boolean,
+                            description: Option[String] = None,
+                            default: Option[String] = None
+                          )
     extends DBTableMember
 }
 

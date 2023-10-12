@@ -15,8 +15,8 @@
  */
 package za.co.absa.ultet.model.table.alterations
 
-import za.co.absa.ultet.model.table.{TableAlteration, TableName}
-import za.co.absa.ultet.model.{ColumnName, SchemaName}
+import za.co.absa.ultet.model.SchemaName
+import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableName}
 
 case class TableColumnDefaultSet(schemaName: SchemaName, tableName: TableName, columnName: ColumnName, default: String) extends TableAlteration {
   override def sqlExpression: String = {
