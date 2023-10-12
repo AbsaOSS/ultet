@@ -24,5 +24,5 @@ case class TableColumnDrop(schemaName: SchemaName, tableName: TableName, columnN
     s"""ALTER TABLE ${schemaName.value}.${tableName.value} DROP COLUMN ${columnName.value};"""
   }
 
-  override def orderInTransaction: Int = 220
+  override def orderInTransaction: Int = 280
 }

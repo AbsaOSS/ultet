@@ -34,7 +34,7 @@ case class TableIndexCreate(schemaName: SchemaName, tableIndex: DBTableIndex) ex
 
     val nullsDistinct = if (tableIndex.nullsDistinct) "NULLS NOT DISTINCT" else "NULLS DISTINCT"
 
-      s"""CREATE$unique INDEX ${tableIndex.indexName} ON ${schemaName.value}.${tableName.value} ($columns) $nullsDistinct;"""
+      s"""CREATE$unique INDEX CONCURRENTLY ${tableIndex.indexName} ON ${schemaName.value}.${tableName.value} ($columns) $nullsDistinct;"""
   }
 
   override def orderInTransaction: Int = 270

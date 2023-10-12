@@ -32,5 +32,5 @@ case class TableColumnAdd(schemaName: SchemaName, tableName: TableName, tableCol
     | ;""".stripMargin
   }
 
-  override def orderInTransaction: Int = 260
+  override def orderInTransaction: Int = 210
 }

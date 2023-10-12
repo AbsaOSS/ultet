@@ -85,12 +85,12 @@ case class DBTable(
 
     val diffResolver = ColumnsDifferenceResolver(schemaName, tableName)(columns, other.columns)
 
+    diffResolver.alterationsForColumnAdditions ++
     diffResolver.alterationsForCommonColumns ++
       alterationsToRemoveIndices ++
-      diffResolver.alterationsForColumnRemovals ++
       pkEntries ++
-      diffResolver.alterationsForColumnAdditions ++
-      alterationsToAddIndices
+      alterationsToAddIndices ++
+      diffResolver.alterationsForColumnRemovals
   }
 }
 
