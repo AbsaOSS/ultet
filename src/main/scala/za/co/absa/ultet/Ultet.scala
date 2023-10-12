@@ -18,7 +18,8 @@ package za.co.absa.ultet
 
 import com.typesafe.scalalogging.Logger
 import scopt.OParser
-import za.co.absa.ultet.model.{SQLEntry, TransactionGroup}
+import za.co.absa.ultet.dbitems.DBItem
+import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup}
 import za.co.absa.ultet.util.{CliParser, Config, DBProperties}
 
 import java.nio.file._
@@ -29,10 +30,8 @@ import scala.util.{Failure, Success, Try}
 object Ultet {
   private val logger = Logger(getClass.getName)
 
-  private def runEntries(dbProperties: DBProperties, dbConnection: String, entries: Seq[SQLEntry]): Unit = {
-    val connection: Connection = DriverManager.getConnection(dbConnection, dbProperties.user, dbProperties.password)
+  private def runEntries(entries: Seq[SQLEntry])(implicit connection: Connection): Unit = {
     val resultSets: Seq[ResultSet] = runTransaction(connection, entries)
-    connection.close()
 
     for (resultSet <- resultSets) {
       val numColumns = resultSet.getMetaData.getColumnCount
@@ -78,13 +77,10 @@ object Ultet {
 
   def listFiles(pathString: String): List[Path] = {
     val path = Paths.get(pathString)
-    val directory = path.getParent
-    val matcher = FileSystems.getDefault.getPathMatcher(s"glob:${path.getFileName}")
 
-    Files.list(directory)
+    Files.list(path)
       .iterator()
       .asScala
-      .filter(x => matcher.matches(x.getFileName))
       .toList
   }
 
@@ -97,21 +93,33 @@ object Ultet {
     val dbProperties = DBProperties.loadProperties(config.dbConnectionPropertiesPath)
     val dbPropertiesSys = DBProperties.getSysDB(dbProperties)
     val dbConnection: String = dbProperties.generateConnectionString()
-    val yamls: List[Path] = listFiles(config.yamlSource)
+    implicit val jdbcConnection: Connection = DriverManager.getConnection(
+      dbConnection, dbProperties.user, dbProperties.password
+    )
+
+    val sourcePaths: List[Path] = listFiles(config.sourceFilesRootPath)
+    val sourcePathsPerSchema = sourcePaths.groupBy { path =>
+      val schemaName = path.getParent.getFileName.toString
+      SchemaName(schemaName)
+    }
+    val sourceURIsPerSchema = sourcePathsPerSchema.mapValues(_.map(_.toUri))
 
     println(dbConnection)
-    yamls.foreach(x => println(x.toString))
+    sourcePaths.foreach(x => println(x.toString))
 
+    val dbItems = DBItem.createDBItems(sourceURIsPerSchema)
     val entries: Seq[SQLEntry] = Seq.empty // TODO
     val orderedEntries = sortEntries(entries)
-    val databaseEntrries = orderedEntries.getOrElse(TransactionGroup.Databases, Seq.empty)
-    val roleEntrries = orderedEntries.getOrElse(TransactionGroup.Roles, Seq.empty)
-    val objectEntrries = orderedEntries.getOrElse(TransactionGroup.Objects, Seq.empty)
-    val indexEntrries = orderedEntries.getOrElse(TransactionGroup.Indexes, Seq.empty)
+    val databaseEntries = orderedEntries.getOrElse(TransactionGroup.Databases, Seq.empty)
+    val roleEntries = orderedEntries.getOrElse(TransactionGroup.Roles, Seq.empty)
+    val objectEntries = orderedEntries.getOrElse(TransactionGroup.Objects, Seq.empty)
+    val indexEntries = orderedEntries.getOrElse(TransactionGroup.Indexes, Seq.empty)
 
-    if (databaseEntrries.nonEmpty) runEntries(dbPropertiesSys, dbConnection, databaseEntrries)
-    if (roleEntrries.nonEmpty) runEntries(dbProperties, dbConnection, roleEntrries)
-    if (objectEntrries.nonEmpty) runEntries(dbProperties, dbConnection, objectEntrries)
-    if (indexEntrries.nonEmpty) runEntries(dbProperties, dbConnection, indexEntrries)
+    if (databaseEntries.nonEmpty) runEntries(databaseEntries)
+    if (roleEntries.nonEmpty) runEntries(roleEntries)
+    if (objectEntries.nonEmpty) runEntries(objectEntries)
+    if (indexEntries.nonEmpty) runEntries(indexEntries)
+
+    jdbcConnection.close()
   }
 }
