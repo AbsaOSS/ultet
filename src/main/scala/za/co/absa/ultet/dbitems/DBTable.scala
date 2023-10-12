@@ -18,7 +18,7 @@ package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.dbitems.DBTableMember._
 import za.co.absa.ultet.model.table.index.{TableIndexCreate, TableIndexDrop}
-import za.co.absa.ultet.model.table.alterations.{TableColumnNotNullDrop, TableColumnDefaultSet, TablePrimaryKeyAdd, TablePrimaryKeyDrop, TableColumnDefaultDrop}
+import za.co.absa.ultet.model.table.alterations.{TableColumnNotNullDrop, TableColumnDefaultSet, TablePrimaryKeyAdd, TablePrimaryKeyDrop, TableColumnDefaultDrop, TableColumnCommentDrop, TableColumnCommentSet}
 import za.co.absa.ultet.model.table.column.{TableColumnAdd, TableColumnDrop}
 import za.co.absa.ultet.model.table.{TableAlteration, TableCreation, TableEntry, TableName}
 import za.co.absa.ultet.model.{ColumnName, DatabaseName, SchemaName, UserName}
@@ -88,9 +88,10 @@ case class DBTable(
     diffResolver.alterationsForColumnAdditions ++
     diffResolver.alterationsForCommonColumns ++
       alterationsToRemoveIndices ++
-      pkEntries ++
-      alterationsToAddIndices ++
       diffResolver.alterationsForColumnRemovals
+    // pkEntries ++ todo #94
+    // alterationsToAddIndices ++ todo #94
+
   }
 }
 
@@ -150,7 +151,11 @@ object DBTable {
     }
 
     private def generateAlterForDescriptionChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
-      Seq.empty // todo change comment
+      (thisCol.description, otherCol.description) match {
+        case (t, o) if t == o => Seq.empty // no change
+        case (Some(t), None) => Seq(TableColumnCommentDrop(schemaName, tableName, thisCol.columnName))
+        case (_, Some(o)) => Seq(TableColumnCommentSet(schemaName, tableName, otherCol.columnName, o)) // both add/set
+      }
     }
 
     private def generateAlterForDefaultChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
