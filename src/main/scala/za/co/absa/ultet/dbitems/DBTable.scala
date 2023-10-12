@@ -49,7 +49,15 @@ case class DBTable(
 
   def -(other: Option[DBTable]): Seq[TableEntry] = {
     other match {
-      case None => Seq(TableCreation(schemaName, tableName))
+      case None => {
+        val pkCreateAlteration: Option[TableAlteration] = primaryKey.map(definedPk => TablePrimaryKeyAdd(tableName, definedPk))
+        val indicesCreateAlterations = indexes.map(idx => TableIndexCreate(idx))
+
+        Seq(TableCreation(schemaName, tableName, columns)) ++
+          pkCreateAlteration.toSeq ++
+          indicesCreateAlterations
+      }
+
       case Some(definedOther) => this - definedOther
     }
   }

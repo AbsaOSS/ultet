@@ -14,14 +14,26 @@
  * limitations under the License.
  */
 package za.co.absa.ultet.model.table
+import za.co.absa.ultet.dbitems.DBTableMember.{DBTableColumn, DBTableIndex, DBTablePrimaryKey}
 import za.co.absa.ultet.model.SchemaName
 
 case class TableCreation(
   schemaName: SchemaName,
   tableName: TableName,
+  columns: Seq[DBTableColumn],
 ) extends TableEntry {
 
-  override def sqlExpression: String = ???
+  override def sqlExpression: String = {
+    val columnLines = columns.map { col =>
+      val notNull = if(col.notNull)" NOT NULL" else ""
+      val default = col.default.map(cDef =>s" DEFAULT $cDef").getOrElse("")
+      s"${col.columnName.value} ${col.dataType}$notNull$default"
+    }
+
+    s"""CREATE TABLE ${schemaName.value}.${tableName.value}(
+       |${columnLines.mkString(",\n")}
+       |);""".stripMargin
+  }
 
   override def orderInTransaction: Int = 200
 }
