@@ -13,25 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+package za.co.absa.ultet.model.table.alterations
 
-package za.co.absa.ultet
+import za.co.absa.ultet.dbitems.DBTableMember.DBTablePrimaryKey
+import za.co.absa.ultet.model.SchemaName
+import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-package object model {
-
-  sealed abstract class DBObjectName(value: String) {
-    def normalized: String = value.toLowerCase
+case class TablePrimaryKeyDrop(schemaName: SchemaName, tableName: TableName, primaryKey: DBTablePrimaryKey) extends TableAlteration {
+  override def sqlExpression: String = {
+    s"""ALTER TABLE ${schemaName.value}.${tableName.value}
+       |DROP CONSTRAINT ${primaryKey.name};""".stripMargin
   }
 
-  case class DatabaseName(value: String) extends DBObjectName(value)
-
-  case class SchemaName(value: String) extends DBObjectName(value)
-
-  case class UserName(value: String) extends DBObjectName(value)
-
-  case class ColumnName(value: String) extends DBObjectName(value)
-
-  case class IndexName(value: String) extends DBObjectName(value)
-
-  case class PrimaryKeyName(value: String) extends DBObjectName(value)
-
+  override def orderInTransaction: Int = 211
 }
