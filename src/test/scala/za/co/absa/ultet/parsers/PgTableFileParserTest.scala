@@ -25,7 +25,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         |indexes:
         |  - indexName: idx_some_name
         |    tableName: testTable
-        |    indexBy: column1
+        |    indexBy: "[column1]"
         |""".stripMargin
 
     PgTableFileParser().parseContentYaml(tableString) shouldBe DBTableFromYaml(
@@ -47,7 +47,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
       indexes = Seq(Map(
         "indexName" -> "idx_some_name",
         "tableName" -> "testTable",
-        "indexBy" -> "column1"
+        "indexBy" -> "[column1]"  // TODO, horrible! Must be string in the YAML file!
       ))
     )
   }
@@ -68,7 +68,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         |indexes:
         |  - indexName: idx_some_name
         |    tableName: testTable
-        |    indexBy: column1
+        |    indexBy: "[column1]"
         |""".stripMargin
 
     PgTableFileParser().parseContentYaml(tableString).convertToDBTable shouldBe DBTable(

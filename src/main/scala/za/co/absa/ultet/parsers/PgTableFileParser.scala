@@ -2,7 +2,7 @@ package za.co.absa.ultet.parsers
 
 import cats.syntax.either._
 import io.circe.generic.auto._
-import io.circe.{yaml, _}
+import io.circe.{yaml, Error}
 import za.co.absa.ultet.dbitems.DBTable
 import za.co.absa.ultet.dbitems.DBTableMember.{DBTableColumn, DBTableIndex, DBTablePrimaryKey}
 import za.co.absa.ultet.model._
