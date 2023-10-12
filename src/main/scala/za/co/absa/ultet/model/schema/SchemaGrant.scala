@@ -13,12 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
 
-import za.co.absa.ultet.model.SQLEntry
-import za.co.absa.ultet.model.TransactionGroup
+package za.co.absa.ultet.model.schema
 
-trait FunctionEntry extends SQLEntry {
-  override def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
+import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup, UserName}
+import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
+case class SchemaGrant(name: SchemaName, roles: Seq[UserName]) extends SQLEntry {
+  override def sqlExpression: String = {
+    s"GRANT USAGE ON SCHEMA ${name.value} TO ${roles.map(_.value).mkString(", ")};"
+  }
+
+  override def transactionGroup: TransactionGroup = TransactionGroup.Objects
+
+  override def orderInTransaction: Int = 70
 }

@@ -16,7 +16,6 @@
 package za.co.absa.ultet.model.function
 
 import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
 case class FunctionDrop(
                          schemaName: SchemaName,
@@ -27,8 +26,6 @@ case class FunctionDrop(
     val argumentsString = arguments.map(_.value).mkString(",")
     s"""DROP FUNCTION ${schemaName.value}.${functionName.value}($argumentsString);"""
   }
-
-  override def transactionGroup: TransactionGroup = ???
 
   override def orderInTransaction: Int = 100
 }

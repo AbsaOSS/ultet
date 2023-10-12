@@ -23,6 +23,7 @@ object Dependencies {
     "com.github.scopt" %% "scopt" % "4.1.0",
     "com.typesafe" % "config" % "1.4.2",
     "ch.qos.logback" % "logback-classic" % "1.4.7",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5"
+    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
+    "org.postgresql" % "postgresql" % "42.6.0"
   )
 }

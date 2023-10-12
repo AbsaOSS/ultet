@@ -13,12 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
+package za.co.absa.ultet.model.table
 
-import za.co.absa.ultet.model.SQLEntry
-import za.co.absa.ultet.model.TransactionGroup
-
-trait FunctionEntry extends SQLEntry {
-  override def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
-
-}
+trait TableAlteration extends TableEntry

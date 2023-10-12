@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
 
-import za.co.absa.ultet.model.SQLEntry
-import za.co.absa.ultet.model.TransactionGroup
+package za.co.absa.ultet.dbitems
 
-trait FunctionEntry extends SQLEntry {
-  override def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
+import za.co.absa.ultet.model.{SQLEntry, UserEntry, UserName}
 
+case class DBUser(name: UserName) extends DBItem {
+
+  override def sqlEntries: Seq[SQLEntry] = {
+    Seq(UserEntry(name))
+  }
 }

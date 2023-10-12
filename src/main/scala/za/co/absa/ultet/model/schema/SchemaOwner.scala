@@ -13,12 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package za.co.absa.ultet.model.function
 
-import za.co.absa.ultet.model.SQLEntry
-import za.co.absa.ultet.model.TransactionGroup
+package za.co.absa.ultet.model.schema
 
-trait FunctionEntry extends SQLEntry {
-  override def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
+import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup, UserName}
+import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
+case class SchemaOwner(name: SchemaName, owner: UserName) extends SQLEntry {
+  override def sqlExpression: String = s"ALTER SCHEMA ${name.value} OWNER TO ${owner.value};"
+
+  override def transactionGroup: TransactionGroup = TransactionGroup.Objects
+
+  override def orderInTransaction: Int = 60
 }
+
