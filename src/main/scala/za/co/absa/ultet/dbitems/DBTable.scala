@@ -88,21 +88,21 @@ case class DBTable(
 
 object DBTable {
   case class ColumnsDifferenceResolver(tableName: TableName)(thisColumns: Seq[DBTableColumn], otherColumns: Seq[DBTableColumn]) {
-    val thisColumnNames = thisColumns.map(_.columnName)
-    val otherColumnNames = otherColumns.map(_.columnName)
+    private[dbitems] val thisColumnNames = thisColumns.map(_.columnName)
+    private[dbitems] val otherColumnNames = otherColumns.map(_.columnName)
 
-    val columnNamesToRemove: Set[ColumnName] = {
+    private[dbitems] val columnNamesToRemove: Set[ColumnName] = {
       thisColumnNames.filterNot(otherColumnNames.contains).toSet // remove those that are not found in other.columns
     }
-    val columnNamesToAdd: Seq[ColumnName] = otherColumnNames.filterNot(thisColumnNames.contains) // add those that are not found in this.columns
+    private[dbitems] val columnNamesToAdd: Seq[ColumnName] = otherColumnNames.filterNot(thisColumnNames.contains) // add those that are not found in this.columns
 
-    val commonColumnNames = thisColumnNames.toSet ++ otherColumnNames.toSet -- columnNamesToRemove -- columnNamesToAdd
+    private[dbitems] val commonColumnNames = thisColumnNames.toSet ++ otherColumnNames.toSet -- columnNamesToRemove -- columnNamesToAdd
 
-    def columnsToAdd: Seq[DBTableColumn] = otherColumns.filter(col => columnNamesToAdd.contains(col.columnName))
+    private[dbitems] def columnsToAdd: Seq[DBTableColumn] = otherColumns.filter(col => columnNamesToAdd.contains(col.columnName))
 
-    def columnsToRemove: Set[DBTableColumn] = thisColumns.filter(col => columnNamesToRemove.contains(col.columnName)).toSet
+    private[dbitems] def columnsToRemove: Set[DBTableColumn] = thisColumns.filter(col => columnNamesToRemove.contains(col.columnName)).toSet
 
-    def commonColumns: Set[(DBTableColumn, DBTableColumn)] = {
+    private[dbitems] def commonColumns: Set[(DBTableColumn, DBTableColumn)] = {
       commonColumnNames.map { commonName =>
         val tCol = thisColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${tableName.value}"))
         val oCol = otherColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${tableName.value}"))
@@ -128,12 +128,12 @@ object DBTable {
       }.toSeq
     }
 
-    def generateAlterForDataTypeChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
+    private def generateAlterForDataTypeChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
       // todo for very specific datatype changes only? from/to String, numerics?
       throw new IllegalStateException(s"Cannot change datatype of ${thisCol.columnName.value} from ${thisCol.dataType} to ${otherCol.dataType} ")
     }
 
-    def generateAlterForNotNullChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
+    private def generateAlterForNotNullChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
       (thisCol.notNull, otherCol.notNull) match {
         case (t, o) if t == o => Seq.empty // no change
         case (true, false) => Seq(TableColumnNotNullDrop(tableName, otherCol.columnName))
@@ -141,11 +141,11 @@ object DBTable {
       }
     }
 
-    def generateAlterForDescriptionChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
+    private def generateAlterForDescriptionChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
       Seq.empty // todo change comment
     }
 
-    def generateAlterForDefaultChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
+    private def generateAlterForDefaultChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
       (thisCol.default, otherCol.default) match {
         case (t, o) if t == o => Seq.empty // no change
         case (Some(t), None) => Seq(TableColumnDefaultDrop(tableName, thisCol.columnName))
