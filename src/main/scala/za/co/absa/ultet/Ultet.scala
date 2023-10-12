@@ -30,6 +30,10 @@ import scala.util.{Failure, Success, Try}
 object Ultet {
   private val logger = Logger(getClass.getName)
 
+  private def extractSQLEntries(dbItems: Seq[DBItem]): Seq[SQLEntry] = {
+    dbItems.flatMap { item => item.sqlEntries }
+  }
+
   private def runEntries(entries: Seq[SQLEntry])(implicit connection: Connection): Unit = {
     val resultSets: Seq[ResultSet] = runTransaction(connection, entries)
 
@@ -107,8 +111,8 @@ object Ultet {
     println(dbConnection)
     sourcePaths.foreach(x => println(x.toString))
 
-    val dbItems = DBItem.createDBItems(sourceURIsPerSchema)
-    val entries: Seq[SQLEntry] = Seq.empty // TODO
+    val dbItems: Seq[DBItem] = DBItem.createDBItems(sourceURIsPerSchema)
+    val entries: Seq[SQLEntry] = extractSQLEntries(dbItems)
     val orderedEntries = sortEntries(entries)
     val databaseEntries = orderedEntries.getOrElse(TransactionGroup.Databases, Seq.empty)
     val roleEntries = orderedEntries.getOrElse(TransactionGroup.Roles, Seq.empty)
