@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 ABSA Group Limited
+ * Copyright 2023 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,16 +14,15 @@
  * limitations under the License.
  */
 
-import sbt._
+package za.co.absa.ultet.model.schema
 
-object Dependencies {
-  lazy val coreDependencies: Seq[ModuleID] = Seq(
-    "org.scalactic" %% "scalactic" % "3.2.17",
-    "org.scalatest" %% "scalatest" % "3.2.17" % "test",
-    "com.github.scopt" %% "scopt" % "4.1.0",
-    "com.typesafe" % "config" % "1.4.2",
-    "ch.qos.logback" % "logback-classic" % "1.4.7",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.postgresql" % "postgresql" % "42.6.0"
-  )
+import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup}
+import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
+
+case class SchemaCreate(name: SchemaName) extends SQLEntry {
+  override def sqlExpression: String = s"CREATE SCHEMA IF NOT EXISTS ${name.value};"
+
+  override def transactionGroup: TransactionGroup = TransactionGroup.Objects
+
+  override def orderInTransaction: Int = 55
 }
