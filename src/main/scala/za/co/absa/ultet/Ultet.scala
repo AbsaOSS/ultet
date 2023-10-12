@@ -16,8 +16,9 @@
 
 package za.co.absa.ultet
 
+import com.typesafe.scalalogging.Logger
 import scopt.OParser
-import za.co.absa.ultet.model.SQLEntry
+import za.co.absa.ultet.model.{SQLEntry, TransactionGroup}
 import za.co.absa.ultet.util.{CliParser, Config, DBProperties}
 
 import java.nio.file._
@@ -26,6 +27,23 @@ import java.sql.{Connection, DriverManager, ResultSet}
 import scala.util.{Failure, Success, Try}
 
 object Ultet {
+  private val logger = Logger(getClass.getName)
+
+  private def runEntries(dbProperties: DBProperties, dbConnection: String, entries: Seq[SQLEntry]): Unit = {
+    val connection: Connection = DriverManager.getConnection(dbConnection, dbProperties.user, dbProperties.password)
+    val resultSets: Seq[ResultSet] = runTransaction(connection, entries)
+    connection.close()
+
+    for (resultSet <- resultSets) {
+      val numColumns = resultSet.getMetaData.getColumnCount
+      while (resultSet.next()) {
+        val row = (1 to numColumns).map(col => resultSet.getString(col))
+        logger.info(row.mkString(", "))
+      }
+      resultSet.close()
+    }
+  }
+
   def runTransaction(connection: Connection, entries: Seq[SQLEntry]): Seq[ResultSet] = {
     val autoCommitOriginalStatus = connection.getAutoCommit
     connection.setAutoCommit(false)
@@ -52,6 +70,12 @@ object Ultet {
     resultSets
   }
 
+  def sortEntries(entries: Seq[SQLEntry]): Map[TransactionGroup.Value, Seq[SQLEntry]] = {
+    entries
+      .groupBy(_.transactionGroup)
+      .mapValues(_.sortBy(_.orderInTransaction))
+  }
+
   def listFiles(pathString: String): List[Path] = {
     val path = Paths.get(pathString)
     val directory = path.getParent
@@ -71,27 +95,23 @@ object Ultet {
     }
 
     val dbProperties = DBProperties.loadProperties(config.dbConnectionPropertiesPath)
+    val dbPropertiesSys = DBProperties.getSysDB(dbProperties)
     val dbConnection: String = dbProperties.generateConnectionString()
     val yamls: List[Path] = listFiles(config.yamlSource)
 
     println(dbConnection)
     yamls.foreach(x => println(x.toString))
 
-
-    val connection: Connection = DriverManager.getConnection(dbConnection, dbProperties.user, dbProperties.password)
     val entries: Seq[SQLEntry] = Seq.empty // TODO
-    val resultSets = runTransaction(connection, entries)
+    val orderedEntries = sortEntries(entries)
+    val databaseEntrries = orderedEntries.getOrElse(TransactionGroup.Databases, Seq.empty)
+    val roleEntrries = orderedEntries.getOrElse(TransactionGroup.Roles, Seq.empty)
+    val objectEntrries = orderedEntries.getOrElse(TransactionGroup.Objects, Seq.empty)
+    val indexEntrries = orderedEntries.getOrElse(TransactionGroup.Indexes, Seq.empty)
 
-    connection.close()
-
-    for ((resultSet, i) <- resultSets.zipWithIndex) {
-      println(s"Results for query ${i + 1}:")
-      while (resultSet.next()) {
-        // assuming first column is an int and second column is a string for demonstration
-        println(s"${resultSet.getInt(1)}, ${resultSet.getString(2)}")
-      }
-      resultSet.close()
-    }
-
+    if (databaseEntrries.nonEmpty) runEntries(dbPropertiesSys, dbConnection, databaseEntrries)
+    if (roleEntrries.nonEmpty) runEntries(dbProperties, dbConnection, roleEntrries)
+    if (objectEntrries.nonEmpty) runEntries(dbProperties, dbConnection, objectEntrries)
+    if (indexEntrries.nonEmpty) runEntries(dbProperties, dbConnection, indexEntrries)
   }
 }

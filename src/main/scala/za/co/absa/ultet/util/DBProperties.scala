@@ -64,6 +64,13 @@ case class DBProperties(serverName: String,
 }
 
 object DBProperties {
+  def getSysDB(dbProperties: DBProperties): DBProperties = {
+    dbProperties.subprotocol match {
+      case "postgresql" => dbProperties.copy(database = "postgres")
+      case _ => throw new NotImplementedError(s"Subprotocol ${dbProperties.subprotocol} is not implemented yet")
+    }
+  }
+
   def loadProperties(filePath: String): DBProperties = {
     val config = ConfigFactory.parseFile(new File(filePath))
 
