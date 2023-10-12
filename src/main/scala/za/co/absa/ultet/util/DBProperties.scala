@@ -39,6 +39,8 @@ case class DBProperties(serverName: String,
                         database: String,
                         portNumber: Option[String],
                         properties: Map[String, String] = Map.empty,
+                        user: String,
+                        password: String,
                         protocol: String = "jdbc",
                         subprotocol: String = "postgresql") {
   def generateConnectionString(): String = {
@@ -62,12 +64,21 @@ case class DBProperties(serverName: String,
 }
 
 object DBProperties {
+  def getSysDB(dbProperties: DBProperties): DBProperties = {
+    dbProperties.subprotocol match {
+      case "postgresql" => dbProperties.copy(database = "postgres")
+      case _ => throw new NotImplementedError(s"Subprotocol ${dbProperties.subprotocol} is not implemented yet")
+    }
+  }
+
   def loadProperties(filePath: String): DBProperties = {
     val config = ConfigFactory.parseFile(new File(filePath))
 
     // Extract required properties
     val serverName = config.getString("serverName")
     val database = config.getString("database")
+    val user = config.getString("user")
+    val password = config.getString("password")
     val portNumber = if(config.hasPath("portNumber")) Some(config.getString("portNumber")) else None
     val protocol = if(config.hasPath("protocol")) Some(config.getString("protocol")) else None
     val subprotocol = if(config.hasPath("subprotocol")) Some(config.getString("subprotocol")) else None

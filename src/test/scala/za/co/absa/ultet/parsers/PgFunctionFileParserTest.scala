@@ -3,8 +3,9 @@ package za.co.absa.ultet.parsers
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import za.co.absa.ultet.dbitems.DBFunctionFromSource
-import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
-import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionName}
+import za.co.absa.ultet.model.{DatabaseName, SQLEntry, SchemaName, UserName}
+import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionBody, FunctionGrant, FunctionName, FunctionOwnership}
+
 
 class PgFunctionFileParserTest extends AnyFlatSpec with Matchers {
 
@@ -31,9 +32,9 @@ class PgFunctionFileParserTest extends AnyFlatSpec with Matchers {
 
     PgFunctionFileParser().parseString(functionString) shouldBe DBFunctionFromSource(
       fnName = FunctionName("public_functionX"),
-      paramTypes = Seq("TEXT", "INTEGER", "hstore").map(FunctionArgumentType),
+      paramTypes = Seq(FunctionArgumentType("TEXT"), FunctionArgumentType("INTEGER"), FunctionArgumentType("hstore")),
       owner = UserName("owner_user123"),
-      users = Seq("user_for_accessA", "user_for_accessB", "user_for_accessZ").map(UserName),
+      users = Seq(UserName("user_for_accessA"), UserName("user_for_accessB"), UserName("user_for_accessZ")),
       schema = SchemaName("my_schema1"),
       database = DatabaseName("eXample_db"),
       sqlBody = functionString // the whole thing
@@ -74,12 +75,12 @@ class PgFunctionFileParserTest extends AnyFlatSpec with Matchers {
 
     val parsedDBItemFromSource = PgFunctionFileParser().parseFile(testFileUri)
 
-    parsedDBItemFromSource.fnName shouldBe "public_function"
-    parsedDBItemFromSource.schema shouldBe "my_schema"
-    parsedDBItemFromSource.paramTypes shouldBe Seq("TEXT")
-    parsedDBItemFromSource.owner shouldBe "some_owner_user"
-    parsedDBItemFromSource.users shouldBe Seq("user_for_access")
-    parsedDBItemFromSource.database shouldBe "example_db"
+    parsedDBItemFromSource.fnName shouldBe FunctionName("public_function")
+    parsedDBItemFromSource.schema shouldBe SchemaName("my_schema")
+    parsedDBItemFromSource.paramTypes shouldBe Seq(FunctionArgumentType("TEXT"))
+    parsedDBItemFromSource.owner shouldBe UserName("some_owner_user")
+    parsedDBItemFromSource.users shouldBe Seq(UserName("user_for_access"))
+    parsedDBItemFromSource.database shouldBe DatabaseName("example_db")
     parsedDBItemFromSource.sqlBody should include("CREATE OR REPLACE FUNCTION my_schema.public_function")
   }
 }
