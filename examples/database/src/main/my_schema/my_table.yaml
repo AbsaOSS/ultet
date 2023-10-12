@@ -29,7 +29,7 @@ columns:
     description: Aggregation name
   - columnName: item_tags
     type: text[]
-    not_null: "true"
+    not_null: true
     description: Array of values
 #    source: `SQL expression how to fill the column if newly created; not in scope yet`
 primary_key:
