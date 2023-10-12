@@ -19,6 +19,10 @@ package za.co.absa.ultet.dbitems
 import za.co.absa.ultet.model.{SQLEntry, SchemaName, UserName}
 import za.co.absa.ultet.model.schema.{SchemaCreate, SchemaGrant, SchemaOwner}
 
+import java.net.URI
+import java.nio.file.{Files, Paths}
+import java.util.stream.Collectors
+
 case class DBSchema(name: SchemaName,
                     ownerName: UserName,
                     users: Seq[UserName]) extends DBItem {
@@ -29,4 +33,16 @@ case class DBSchema(name: SchemaName,
       SchemaGrant(name, users)
     )
   }
+}
+
+object DBSchema {
+
+  def parseTxtFileContainingSchemaOwner(fileUri: URI): UserName = {
+    val path = Paths.get(fileUri)
+    val lines = Files.lines(path)
+    val content = lines.collect(Collectors.joining("\n"))
+
+    UserName(content.trim)
+  }
+
 }
