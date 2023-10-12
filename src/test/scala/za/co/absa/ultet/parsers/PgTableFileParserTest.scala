@@ -3,13 +3,13 @@ package za.co.absa.ultet.parsers
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import za.co.absa.ultet.dbitems.DBTable
-import za.co.absa.ultet.dbitems.DBTableMember.{DBTableColumn, DBTableIndex, DBTablePrimaryKey}
+import za.co.absa.ultet.dbitems.DBTableMember._
 import za.co.absa.ultet.model._
 import za.co.absa.ultet.parsers.PgTableFileParser.DBTableFromYaml
 
 class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 
-  "PgTableFileParserTest" should "return well-prepared object table from example content" in {
+  "PgTableFileParserTest" should "return semi-prepared object table from example content" in {
     val tableString =
       """tableName: testTable
         |schemaName: testSchema
@@ -54,7 +54,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
     )
   }
 
-  "PgTableFileParserTest" should "parse table from example content" in {
+  "PgTableFileParserTest" should "return well-prepared table object from example content" in {
     val tableString =
       """tableName: testTable
         |schemaName: testSchema
@@ -96,6 +96,48 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         tableName = "testTable",
         indexBy = Seq("column1")
       ))
+    )
+  }
+
+  "PgTableFileParserTest" should "return semi-prepared object table from example content, some attributes empty" in {
+    val tableString =
+      """tableName: testTable
+        |schemaName: testSchema
+        |description: Some Description of this madness
+        |primaryDBName: primaryDB
+        |owner: some_owner_user
+        |columns: []
+        |primaryKey:
+        |indexes: []
+        |""".stripMargin
+
+    PgTableFileParser().parseContentYaml(tableString) shouldBe DBTableFromYaml(
+      tableName = "testTable",
+      schemaName = "testSchema",
+      description = Some("Some Description of this madness"),
+      primaryDBName = "primaryDB",
+      owner = "some_owner_user",
+    )
+  }
+
+  "PgTableFileParserTest" should "return well-prepared object table from example content, some attributes empty" in {
+    val tableString =
+      """tableName: testTable
+        |schemaName: testSchema
+        |description: Some Description of this madness
+        |primaryDBName: primaryDB
+        |owner: some_owner_user
+        |columns: []
+        |primaryKey:
+        |indexes: []
+        |""".stripMargin
+
+    PgTableFileParser().parseContentYaml(tableString).convertToDBTable shouldBe DBTable(
+      tableName = TableName("testTable"),
+      schemaName = SchemaName("testSchema"),
+      description = Some("Some Description of this madness"),
+      primaryDBName = DatabaseName("primaryDB"),
+      owner = UserName("some_owner_user"),
     )
   }
 }

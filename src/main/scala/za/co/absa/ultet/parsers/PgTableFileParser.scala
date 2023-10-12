@@ -81,14 +81,21 @@ object PgTableFileParser {
       )
     }
 
-    private def preparePrimaryKey: DBTablePrimaryKey = {
-      DBTablePrimaryKey(
-        primaryKey.get("columns")
-          .replaceAll("^\\[|\\]$", "")
-          .split(",")
-          .map(currColName => ColumnName(currColName.trim)),
-        Some(primaryKey.get("name")),
-      )
+    private def preparePrimaryKey: Option[DBTablePrimaryKey] = {
+      primaryKey.isDefined match {
+        case true =>
+          val cols = primaryKey.get("columns")
+          val pkName = primaryKey.get("name")
+
+          val preparedPk = DBTablePrimaryKey(
+            cols.replaceAll("^\\[|\\]$", "")
+              .split(",")
+              .map(currColName => ColumnName(currColName.trim)),
+            Some(pkName)
+          )
+          Some(preparedPk)
+        case _ => None
+      }
     }
 
     def convertToDBTable: DBTable = {
@@ -106,8 +113,10 @@ object PgTableFileParser {
       val withColumnsAndIndexes = prepareIndexes.foldLeft(withColumns) { case (acc, preparedIndex) =>
         acc.addIndex(preparedIndex)
       }
-      withColumnsAndIndexes.definePrimaryKey(preparePrimaryKey)
+      preparePrimaryKey match {
+        case Some(pk) => withColumnsAndIndexes.definePrimaryKey(pk)
+        case _ => withColumnsAndIndexes
+      }
     }
   }
-
 }
