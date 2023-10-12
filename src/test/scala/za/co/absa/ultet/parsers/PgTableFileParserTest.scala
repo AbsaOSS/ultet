@@ -39,12 +39,12 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         Map(
           "columnName" -> "column1",
           "dataType" -> "bigint",
-          "notNull" -> "true"  // TODO, horrible! Must be string!
+          "notNull" -> "true"  // TODO, horrible! Must be string in the YAML file!
         ),
       ),
       primaryKey = Some(Map(
         "name" -> "pk_my_table",
-        "columns" -> "[id_key_field1, id_key_field1]"  // TODO, horrible! Must be string!
+        "columns" -> "[id_key_field1, id_key_field1]"  // TODO, horrible! Must be string in the YAML file!
       )),
       indexes = Seq(Map(
         "indexName" -> "idx_some_name",

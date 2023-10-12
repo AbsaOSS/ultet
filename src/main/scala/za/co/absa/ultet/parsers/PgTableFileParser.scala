@@ -110,5 +110,4 @@ object PgTableFileParser {
     }
   }
 
-
 }
