@@ -17,8 +17,8 @@
 package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.dbitems.DBTableMember._
-import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName, TableName}
-import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName, TableName}
+import za.co.absa.ultet.model.table.TableName
+import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 
 import java.sql.Connection
 
