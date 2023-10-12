@@ -19,9 +19,10 @@ package za.co.absa.ultet
 import com.typesafe.scalalogging.Logger
 import scopt.OParser
 import za.co.absa.ultet.dbitems.DBItem
-import za.co.absa.ultet.model.{SQLEntry, TransactionGroup}
+import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup}
 import za.co.absa.ultet.util.{CliParser, Config, DBProperties}
 
+import java.net.URI
 import java.nio.file._
 import scala.collection.JavaConverters._
 import java.sql.{Connection, DriverManager, ResultSet}
@@ -30,22 +31,23 @@ import scala.util.{Failure, Success, Try}
 object Ultet {
   private val logger = Logger(getClass.getName)
 
-  private def extractSQLEntries(dbItems: Seq[DBItem]): Seq[SQLEntry] = {
-    dbItems.flatMap { item => item.sqlEntries }
+  private def extractSQLEntries(dbItems: Set[DBItem]): Seq[SQLEntry] = {
+    dbItems.toSeq.flatMap { item => item.sqlEntries }
   }
 
-  private def runEntries(dbProperties: DBProperties, dbConnection: String, entries: Seq[SQLEntry]): Unit = {
-    val connection: Connection = DriverManager.getConnection(dbConnection, dbProperties.user, dbProperties.password)
-    val resultSets: Seq[ResultSet] = runTransaction(connection, entries)
-    connection.close()
+  private def runEntries(entries: Seq[SQLEntry], dryRun: Boolean = false)(implicit connection: Connection): Unit = {
+    if(dryRun) entries.map(_.sqlExpression).foreach(println)
+    else {
+      val resultSets: Seq[ResultSet] = runTransaction(connection, entries)
 
-    for (resultSet <- resultSets) {
-      val numColumns = resultSet.getMetaData.getColumnCount
-      while (resultSet.next()) {
-        val row = (1 to numColumns).map(col => resultSet.getString(col))
-        logger.info(row.mkString(", "))
+      for (resultSet <- resultSets) {
+        val numColumns = resultSet.getMetaData.getColumnCount
+        while (resultSet.next()) {
+          val row = (1 to numColumns).map(col => resultSet.getString(col))
+          logger.info(row.mkString(", "))
+        }
+        resultSet.close()
       }
-      resultSet.close()
     }
   }
 
@@ -81,16 +83,18 @@ object Ultet {
       .mapValues(_.sortBy(_.orderInTransaction))
   }
 
-  def listFiles(pathString: String): List[Path] = {
-    val path = Paths.get(pathString)
-    val directory = path.getParent
-    val matcher = FileSystems.getDefault.getPathMatcher(s"glob:${path.getFileName}")
+  private def listChildPaths(path: Path): List[Path] = Files.list(path)
+    .iterator()
+    .asScala
+    .toList
 
-    Files.list(directory)
-      .iterator()
-      .asScala
-      .filter(x => matcher.matches(x.getFileName))
-      .toList
+  def listFileURIsPerSchema(pathString: String): Map[SchemaName, List[URI]] = {
+    val path = Paths.get(pathString)
+    val schemaPaths = listChildPaths(path)
+    schemaPaths
+      .map(p => SchemaName(p.getFileName.toString) -> listChildPaths(p))
+      .toMap
+      .mapValues(_.map(_.toUri))
   }
 
   def main(args: Array[String]): Unit = {
@@ -102,22 +106,25 @@ object Ultet {
     val dbProperties = DBProperties.loadProperties(config.dbConnectionPropertiesPath)
     val dbPropertiesSys = DBProperties.getSysDB(dbProperties)
     val dbConnection: String = dbProperties.generateConnectionString()
-    val yamls: List[Path] = listFiles(config.yamlSource)
+    implicit val jdbcConnection: Connection = DriverManager.getConnection(
+      dbConnection, dbProperties.user, dbProperties.password
+    )
 
-    println(dbConnection)
-    yamls.foreach(x => println(x.toString))
+    val sourceURIsPerSchema: Map[SchemaName, List[URI]] = listFileURIsPerSchema(config.sourceFilesRootPath)
 
-    val dbItems: Seq[DBItem] =  Seq.empty[DBItem] // TODO
+    val dbItems: Set[DBItem] = DBItem.createDBItems(sourceURIsPerSchema)
     val entries: Seq[SQLEntry] = extractSQLEntries(dbItems)
     val orderedEntries = sortEntries(entries)
-    val databaseEntrries = orderedEntries.getOrElse(TransactionGroup.Databases, Seq.empty)
-    val roleEntrries = orderedEntries.getOrElse(TransactionGroup.Roles, Seq.empty)
-    val objectEntrries = orderedEntries.getOrElse(TransactionGroup.Objects, Seq.empty)
-    val indexEntrries = orderedEntries.getOrElse(TransactionGroup.Indexes, Seq.empty)
+    val databaseEntries = orderedEntries.getOrElse(TransactionGroup.Databases, Seq.empty)
+    val roleEntries = orderedEntries.getOrElse(TransactionGroup.Roles, Seq.empty)
+    val objectEntries = orderedEntries.getOrElse(TransactionGroup.Objects, Seq.empty)
+    val indexEntries = orderedEntries.getOrElse(TransactionGroup.Indexes, Seq.empty)
 
-    if (databaseEntrries.nonEmpty) runEntries(dbPropertiesSys, dbConnection, databaseEntrries)
-    if (roleEntrries.nonEmpty) runEntries(dbProperties, dbConnection, roleEntrries)
-    if (objectEntrries.nonEmpty) runEntries(dbProperties, dbConnection, objectEntrries)
-    if (indexEntrries.nonEmpty) runEntries(dbProperties, dbConnection, indexEntrries)
+    if (databaseEntries.nonEmpty) runEntries(databaseEntries, config.dryRun)
+    if (roleEntries.nonEmpty) runEntries(roleEntries, config.dryRun)
+    if (objectEntries.nonEmpty) runEntries(objectEntries, config.dryRun)
+    if (indexEntries.nonEmpty) runEntries(indexEntries, config.dryRun)
+
+    jdbcConnection.close()
   }
 }
