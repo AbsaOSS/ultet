@@ -38,8 +38,7 @@ case class PgTableFileParser() {
 object PgTableFileParser {
 
   case class DBTableFromYaml(
-    tableName: String,
-    schemaName: String,
+    table: String,
     description: Option[String],
     primaryDBName: String,
     owner: String,
@@ -99,9 +98,10 @@ object PgTableFileParser {
     }
 
     def convertToDBTable: DBTable = {
+      val schemaAndTbl = table.split("\\.", 2)
       val semiPreparedTable = DBTable(
-        TableName(tableName),
-        SchemaName(schemaName),
+        TableName(schemaAndTbl(1)),
+        SchemaName(schemaAndTbl(0)),
         description,
         DatabaseName(primaryDBName),
         UserName(owner)

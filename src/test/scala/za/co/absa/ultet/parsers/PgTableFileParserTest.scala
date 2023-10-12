@@ -11,8 +11,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 
   "PgTableFileParserTest" should "return semi-prepared object table from example content" in {
     val tableString =
-      """tableName: testTable
-        |schemaName: testSchema
+      """table: testSchema.testTable
         |description: Some Description of this madness
         |primaryDBName: primaryDB
         |owner: some_owner_user
@@ -30,8 +29,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         |""".stripMargin
 
     PgTableFileParser().parseContentYaml(tableString) shouldBe DBTableFromYaml(
-      tableName = "testTable",
-      schemaName = "testSchema",
+      table = "testSchema.testTable",
       description = Some("Some Description of this madness"),
       primaryDBName = "primaryDB",
       owner = "some_owner_user",
@@ -56,8 +54,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 
   "PgTableFileParserTest" should "return well-prepared table object from example content" in {
     val tableString =
-      """tableName: testTable
-        |schemaName: testSchema
+      """table: testSchema.testTable
         |description: Some Description of this madness
         |primaryDBName: primaryDB
         |owner: some_owner_user
@@ -101,8 +98,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 
   "PgTableFileParserTest" should "return semi-prepared object table from example content, some attributes empty" in {
     val tableString =
-      """tableName: testTable
-        |schemaName: testSchema
+      """table: testSchema.testTable
         |description: Some Description of this madness
         |primaryDBName: primaryDB
         |owner: some_owner_user
@@ -112,8 +108,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         |""".stripMargin
 
     PgTableFileParser().parseContentYaml(tableString) shouldBe DBTableFromYaml(
-      tableName = "testTable",
-      schemaName = "testSchema",
+      table = "testSchema.testTable",
       description = Some("Some Description of this madness"),
       primaryDBName = "primaryDB",
       owner = "some_owner_user",
@@ -122,8 +117,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 
   "PgTableFileParserTest" should "return well-prepared object table from example content, some attributes empty" in {
     val tableString =
-      """tableName: testTable
-        |schemaName: testSchema
+      """table: testSchema.testTable
         |description: Some Description of this madness
         |primaryDBName: primaryDB
         |owner: some_owner_user
