@@ -35,16 +35,19 @@ object Ultet {
     dbItems.toSeq.flatMap { item => item.sqlEntries }
   }
 
-  private def runEntries(entries: Seq[SQLEntry])(implicit connection: Connection): Unit = {
-    val resultSets: Seq[ResultSet] = runTransaction(connection, entries)
+  private def runEntries(entries: Seq[SQLEntry], dryRun: Boolean = false)(implicit connection: Connection): Unit = {
+    if(dryRun) entries.map(_.sqlExpression).foreach(println)
+    else {
+      val resultSets: Seq[ResultSet] = runTransaction(connection, entries)
 
-    for (resultSet <- resultSets) {
-      val numColumns = resultSet.getMetaData.getColumnCount
-      while (resultSet.next()) {
-        val row = (1 to numColumns).map(col => resultSet.getString(col))
-        logger.info(row.mkString(", "))
+      for (resultSet <- resultSets) {
+        val numColumns = resultSet.getMetaData.getColumnCount
+        while (resultSet.next()) {
+          val row = (1 to numColumns).map(col => resultSet.getString(col))
+          logger.info(row.mkString(", "))
+        }
+        resultSet.close()
       }
-      resultSet.close()
     }
   }
 
@@ -117,10 +120,10 @@ object Ultet {
     val objectEntries = orderedEntries.getOrElse(TransactionGroup.Objects, Seq.empty)
     val indexEntries = orderedEntries.getOrElse(TransactionGroup.Indexes, Seq.empty)
 
-    if (databaseEntries.nonEmpty) runEntries(databaseEntries)
-    if (roleEntries.nonEmpty) runEntries(roleEntries)
-    if (objectEntries.nonEmpty) runEntries(objectEntries)
-    if (indexEntries.nonEmpty) runEntries(indexEntries)
+    if (databaseEntries.nonEmpty) runEntries(databaseEntries, config.dryRun)
+    if (roleEntries.nonEmpty) runEntries(roleEntries, config.dryRun)
+    if (objectEntries.nonEmpty) runEntries(objectEntries, config.dryRun)
+    if (indexEntries.nonEmpty) runEntries(indexEntries, config.dryRun)
 
     jdbcConnection.close()
   }
