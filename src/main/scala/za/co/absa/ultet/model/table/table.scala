@@ -18,6 +18,13 @@ package za.co.absa.ultet.model
 
 package object table {
 
-  case class TableName(value: String) extends AnyVal
+  case class TableName(value: String) extends DBObjectName(value)
+
+  case class ColumnName(value: String) extends DBObjectName(value)
+
+  case class IndexName(value: String) extends DBObjectName(value)
+
+  case class PrimaryKeyName(value: String) extends DBObjectName(value)
+
 
 }

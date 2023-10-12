@@ -17,15 +17,18 @@
 package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.dbitems.DBTableMember._
+import za.co.absa.ultet.model.table.TableName
 import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
+
+import java.sql.Connection
 
 //TODO checks on validity of entries
 case class DBTable(
-                   tableName: String,
+                   tableName: TableName,
                    schemaName: SchemaName,
-                   description: Option[String],
                    primaryDBName: DatabaseName,
                    owner: UserName,
+                   description: Option[String] = None,
                    columns: Seq[DBTableColumn] = Seq.empty,
                    primaryKey: Option[DBTablePrimaryKey] = None,
                    indexes: Seq[DBTableIndex] = Seq.empty
@@ -38,5 +41,26 @@ case class DBTable(
   }
   def definePrimaryKey(pk: DBTablePrimaryKey): DBTable = {
     this.copy(primaryKey = Some(pk))
+  }
+}
+
+object DBTable {
+  def createFromPG(schemaName: SchemaName, tableName: TableName, databaseName: DatabaseName)
+                  (implicit jdbcConnection: Option[Connection]): Option[DBTable] = {
+    jdbcConnection.flatMap { dbConnection =>
+      val extractor = new ExtractorOfDBTable(schemaName, tableName)(dbConnection)
+      extractor.owner.map { owner =>
+        DBTable(
+          tableName,
+          schemaName,
+          databaseName,
+          UserName(owner),
+          extractor.description,
+          extractor.columns,
+          extractor.primaryKey,
+          extractor.indexes
+        )
+      }
+    }
   }
 }
