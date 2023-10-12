@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet
+package za.co.absa.ultet.model.schema
 
-package object model {
+import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup, UserName}
+import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
-  abstract class DBObjectName(value: String) {
-    def normalized: String = value.toLowerCase
-  }
+case class SchemaOwner(name: SchemaName, owner: UserName) extends SQLEntry {
+  override def sqlExpression: String = s"ALTER SCHEMA ${name.value} OWNER TO ${owner.value};"
 
-  case class DatabaseName(value: String) extends DBObjectName(value)
+  override def transactionGroup: TransactionGroup = TransactionGroup.Objects
 
-  case class SchemaName(value: String) extends DBObjectName(value)
-
-  case class UserName(value: String) extends DBObjectName(value)
-
+  override def orderInTransaction: Int = 60
 }
+

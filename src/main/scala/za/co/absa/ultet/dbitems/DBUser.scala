@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet
+package za.co.absa.ultet.dbitems
 
-package object model {
+import za.co.absa.ultet.model.{SQLEntry, UserEntry, UserName}
 
-  abstract class DBObjectName(value: String) {
-    def normalized: String = value.toLowerCase
+case class DBUser(name: UserName) extends DBItem {
+
+  override def sqlEntries: Seq[SQLEntry] = {
+    Seq(UserEntry(name))
   }
-
-  case class DatabaseName(value: String) extends DBObjectName(value)
-
-  case class SchemaName(value: String) extends DBObjectName(value)
-
-  case class UserName(value: String) extends DBObjectName(value)
-
 }
