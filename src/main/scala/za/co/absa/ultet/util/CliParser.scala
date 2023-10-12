@@ -25,9 +25,9 @@ object CliParser {
     OParser.sequence(
       programName("Ultet"),
       head("ultet", "0.1"),
-      opt[String]('s', "source-yaml")
-        .action((x, c) => c.copy(yamlSource = x))
-        .text("Path to source file(s). Use * as a wildcard.")
+      opt[String]('s', "source-files-root-path")
+        .action((x, c) => c.copy(sourceFilesRootPath = x))
+        .text("Path to the root of source files.")
         .required(),
       opt[Boolean]('d', "dry-run")
         .action((x, c) => c.copy(dryRun = x))

@@ -17,11 +17,11 @@
 package za.co.absa.ultet.dbitems
 
 import za.co.absa.ultet.dbitems.DBTableMember._
-import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
+import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName, TableName}
 
 //TODO checks on validity of entries
 case class DBTable(
-                   tableName: String,
+                   tableName: TableName,
                    schemaName: SchemaName,
                    description: Option[String],
                    primaryDBName: DatabaseName,
