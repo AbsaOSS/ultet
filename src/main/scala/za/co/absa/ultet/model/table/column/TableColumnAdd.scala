@@ -13,10 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package za.co.absa.ultet.model.table.column
 
 import za.co.absa.ultet.dbitems.DBTableMember.DBTableColumn
-import za.co.absa.ultet.model
 import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 

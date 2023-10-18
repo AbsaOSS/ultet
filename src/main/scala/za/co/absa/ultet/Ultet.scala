@@ -80,7 +80,9 @@ object Ultet {
   def sortEntries(entries: Seq[SQLEntry]): Map[TransactionGroup.Value, Seq[SQLEntry]] = {
     entries
       .groupBy(_.transactionGroup)
+      .view
       .mapValues(_.sortBy(_.orderInTransaction))
+      .toMap
   }
 
   private def listChildPaths(path: Path): List[Path] = Files.list(path)
@@ -94,7 +96,9 @@ object Ultet {
     schemaPaths
       .map(p => SchemaName(p.getFileName.toString) -> listChildPaths(p))
       .toMap
+      .view
       .mapValues(_.map(_.toUri))
+      .toMap
   }
 
   def main(args: Array[String]): Unit = {

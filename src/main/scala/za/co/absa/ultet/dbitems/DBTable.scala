@@ -22,7 +22,6 @@ import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 import za.co.absa.ultet.model.table.index.{TableIndexCreate, TableIndexDrop}
 import za.co.absa.ultet.model.table.alterations.{TableColumnCommentDrop, TableColumnCommentSet, TableColumnDefaultDrop, TableColumnDefaultSet, TableColumnNotNullDrop, TablePrimaryKeyAdd, TablePrimaryKeyDrop}
 import za.co.absa.ultet.model.table.column.{TableColumnAdd, TableColumnDrop}
-import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 import DBTable.ColumnsDifferenceResolver
 
 import java.sql.Connection

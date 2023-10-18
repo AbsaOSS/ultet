@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 ABSA Group Limited
+ * Copyright 2023 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,15 +18,19 @@ import Dependencies._
 
 ThisBuild / organization := "za.co.absa.ultet"
 
-lazy val scala212 = "2.12.17"
+lazy val scala213 = "2.13.12"
 
-ThisBuild / scalaVersion := scala212
+ThisBuild / scalaVersion := scala213
+ThisBuild / versionScheme := Some("early-semver")
+
+scalacOptions ++= Seq(
+    "-Ymacro-annotations"
+)
 
 lazy val ultet = (project in file("."))
   .settings(
     name := "ultet",
     libraryDependencies ++= coreDependencies,
     publish / skip := true,
-    assembly / mainClass := Some("za.co.absa.ultet.Ultet"),
-    addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
+    assembly / mainClass := Some("za.co.absa.ultet.Ultet")
   )

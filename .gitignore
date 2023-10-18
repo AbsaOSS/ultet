@@ -14,4 +14,36 @@
 # limitations under the License.
 #
 
-sbt.version=1.6.2
+# use glob syntax.
+syntax: glob
+*.ser
+*.class
+*~
+*.bak
+#*.off
+*.old
+# eclipse conf file
+.settings
+.classpath
+.project
+.manager
+.scala_dependencies
+.scalastyle
+
+# idea
+.idea
+*.iml
+
+# vs code
+.vscode
+
+# building
+target
+build
+null
+tmp*
+temp*
+dist
+test-output
+build.log
+.bsp

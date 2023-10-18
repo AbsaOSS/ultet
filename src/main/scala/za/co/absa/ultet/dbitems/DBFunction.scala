@@ -13,9 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
+import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionName}
 
 trait DBFunction extends DBItem {
