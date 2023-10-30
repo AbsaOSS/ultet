@@ -30,3 +30,15 @@ lazy val ultet = (project in file("."))
     assembly / mainClass := Some("za.co.absa.ultet.Ultet"),
     addCompilerPlugin("org.scalamacros" % "paradise" % "2.1.1" cross CrossVersion.full)
   )
+
+// JaCoCo code coverage
+Test / jacocoReportSettings := JacocoReportSettings(
+  title = s"Ultet Jacoco Report - scala:${scalaVersion.value}",
+  formats = Seq(JacocoReportFormats.HTML, JacocoReportFormats.XML)
+)
+
+// exclude example
+Test / jacocoExcludes := Seq(
+//  "za.co.absa.ultet.util.Config", // class only
+//  "za.co.absa.ultet.model.package*" // class and related objects
+)

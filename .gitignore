@@ -1,0 +1,55 @@
+syntax: glob
+*.ser
+*.class
+*~
+*.bak
+#*.off
+*.old
+
+# eclipse conf file
+.settings
+.classpath
+.project
+.manager
+.scala_dependencies
+.scalastyle
+
+# idea
+.idea
+*.iml
+*.ipr
+*.iws
+
+# vs code
+.vscode
+
+# building
+target
+build
+null
+tmp*
+temp*
+dist
+test-output
+build.log
+
+# other scm
+.svn
+.CVS
+.hg*
+
+# switch to regexp syntax.
+#  syntax: regexp
+#  ^\.pc/
+
+.cache*
+dependency-reduced-pom.xml
+
+_testOutput
+_tradeOutput
+_tradeData
+_countryMT
+_currencyMT
+_productMT
+_nestedStructs
+myTestCheckpoints
