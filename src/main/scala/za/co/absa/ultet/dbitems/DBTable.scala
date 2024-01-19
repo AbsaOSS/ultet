@@ -16,14 +16,14 @@
 
 package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.dbitems.DBTableMember._
 import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableCreation, TableEntry, TableName}
 import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 import za.co.absa.ultet.model.table.index.{TableIndexCreate, TableIndexDrop}
 import za.co.absa.ultet.model.table.alterations.{TableColumnCommentDrop, TableColumnCommentSet, TableColumnDefaultDrop, TableColumnDefaultSet, TableColumnNotNullDrop, TablePrimaryKeyAdd, TablePrimaryKeyDrop}
-import za.co.absa.ultet.model.table.column.{TableColumnAdd, TableColumnDrop}
-import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 import DBTable.ColumnsDifferenceResolver
+import za.co.absa.ultet.dbitems.table.DBTableIndex.{DBPrimaryKey, DBSecondaryIndex}
+import za.co.absa.ultet.dbitems.table.DBTableColumn
+import za.co.absa.ultet.model.table.column.{TableColumnAdd, TableColumnDrop}
 
 import java.sql.Connection
 
@@ -34,19 +34,19 @@ case class DBTable(
                    primaryDBName: DatabaseName,
                    owner: UserName,
                    description: Option[String] = None,
-                   columns: Seq[DBTableColumn] = Seq.empty,
-                   primaryKey: Option[DBTablePrimaryKey] = None,
-                   indexes: Seq[DBTableIndex] = Seq.empty
+                   columns: List[DBTableColumn] = List.empty,
+                   primaryKey: Option[DBPrimaryKey] = None,
+                   indexes: Set[DBSecondaryIndex] = Set.empty
                    ) {
   def addColumn(column: DBTableColumn): DBTable = {
     this.copy(columns = columns ++ Seq(column))
   }
 
-  def addIndex(index: DBTableIndex): DBTable = {
+  def addIndex(index: DBSecondaryIndex): DBTable = {
     this.copy(indexes = indexes ++ Seq(index))
   }
 
-  def definePrimaryKey(pk: DBTablePrimaryKey): DBTable = {
+  def definePrimaryKey(pk: DBPrimaryKey): DBTable = {
     this.copy(primaryKey = Some(pk))
   }
 
@@ -68,10 +68,10 @@ case class DBTable(
   def -(other: DBTable): Seq[TableEntry] = {
     assert(tableName == other.tableName, s"Table names must match to diff tables, but $tableName != ${other.tableName}")
 
-    val removeIndices = this.indexes.filterNot(other.indexes.contains)
+    val removeIndices = this.indexes.diff(other.indexes)
     val alterationsToRemoveIndices = removeIndices.map(idx => TableIndexDrop(schemaName, tableName, idx.tableName))
 
-    val addIndices = other.indexes.filterNot(this.indexes.contains)
+    val addIndices = other.indexes.diff(this.indexes)
     val alterationsToAddIndices = addIndices.map(idx => TableIndexCreate(schemaName, idx))
 
     val pkEntries: Seq[TableAlteration] = (this.primaryKey, other.primaryKey) match {

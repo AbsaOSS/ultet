@@ -16,6 +16,8 @@
 
 package za.co.absa.ultet.dbitems
 
+import za.co.absa.balta.classes.setter.Params
+import za.co.absa.balta.classes.{DBConnection, DBQuerySupport, QueryResult, QueryResultRow}
 import za.co.absa.ultet.dbitems.DBTableMember.{DBTableColumn, DBTableIndex, DBTablePrimaryKey}
 import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{ColumnName, TableName}
@@ -23,7 +25,7 @@ import za.co.absa.ultet.model.table.{ColumnName, TableName}
 import java.sql.{Connection, ResultSet}
 
 class ExtractorOfDBTable(val schemaName: SchemaName, val tableName: TableName)
-                        (implicit jdbcConnection: Connection) {
+                        (implicit jdbcConnection: Connection) extends DBQuerySupport {
 
   private val ownerQuery =
     s"""
@@ -62,6 +64,10 @@ class ExtractorOfDBTable(val schemaName: SchemaName, val tableName: TableName)
        |  lower(ST.schemaname) = ${schemaName.normalized} AND
        |  lower(ST.relname) = ${tableName.normalized}
        |""".stripMargin
+
+  private val indexesQuery =
+    s"""
+      |""".stripMargin
 
   def owner: Option[String] = {
     val preparedStatement = jdbcConnection.prepareStatement(ownerQuery)
@@ -111,4 +117,50 @@ class ExtractorOfDBTable(val schemaName: SchemaName, val tableName: TableName)
     // TODO #94
     Seq.empty
   }
+
+  private implicit val connection: DBConnection = new DBConnection(jdbcConnection)
+  private val setters = Params.add(schemaName.normalized).add(tableName.normalized).setters
+
+  private case class IndexColumnRow (
+                                    indexName: String,
+                                    indexBy: Seq[IndexField],
+                                    description: Option[String] = None,
+                                    unique: Boolean = false,
+                                    nullsDistinct: Boolean = true,
+                                    constraint: Option[String] = None
+                                    )
+  private object IndexColumnRow {
+    def apply(row: QueryResultRow): IndexColumnRow = new IndexColumnRow(
+      indexName = row.getString("index_name"),
+      tableName = row.getString("table_name"),
+      indexBy = Seq.empty,
+      description = Option(row.getString("description")),
+      unique = row.getString("is_unique") == "YES",
+      nullsDistinct = row.getString("nulls_distinct") == "YES",
+      constraint = Option(row.getString("constraint_name"))
+  }
+  private def xxx: (Seq[DBTableIndex], Option[DBTablePrimaryKey]) = {
+    val indexes = runQuery("", setters)(_.toList).map(IndexColumnRow(_)).groupBy(_.indexName)
+    ???
+  }
+
+  private def decodeIndexRow(row: QueryResultRow): Either[DBTablePrimaryKey, DBTableIndex] = {
+    if (row.getBoolean("") {
+      Left(DBTablePrimaryKey(
+        columns = Seq.empty,
+        name = Option(row.getString("constraint_name"))
+      ))
+    } else {
+      Right(DBTableIndex(
+        indexName = row.getString("index_name"),
+        tableName = row.getString("table_name"),
+        indexBy = Seq.empty,
+        description = Option(row.getString("description")),
+        unique = row.getString("is_unique") == "YES",
+        nullsDistinct = row.getString("nulls_distinct") == "YES",
+        constraint = Option(row.getString("constraint_name"))
+      ))
+    }
+  }
+
 }
