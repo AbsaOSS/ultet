@@ -3,9 +3,10 @@ package za.co.absa.ultet.parsers
 import org.scalatest.flatspec.AnyFlatSpec
 import org.scalatest.matchers.should.Matchers
 import za.co.absa.ultet.dbitems.DBTable
-import za.co.absa.ultet.dbitems.DBTableMember._
+import za.co.absa.ultet.dbitems.table.DBTableColumn
+import za.co.absa.ultet.dbitems.table.DBTableIndex.{DBPrimaryKey, DBSecondaryIndex, IndexColumn}
 import za.co.absa.ultet.model._
-import za.co.absa.ultet.model.table.{TableName, ColumnName}
+import za.co.absa.ultet.model.table.{ColumnName, IndexName, TableName}
 import za.co.absa.ultet.parsers.PgTableFileParser.DBTableFromYaml
 
 class PgTableFileParserTest extends AnyFlatSpec with Matchers {
@@ -85,14 +86,15 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
           notNull = true
         ),
       ),
-      primaryKey = Some(DBTablePrimaryKey(
-        columns = Seq(ColumnName("id_key_field1"), ColumnName("id_key_field1")),
-        name = Some("pk_my_table"),
+      primaryKey = Some(DBPrimaryKey(
+        columns = Seq("id_key_field1", "id_key_field1").map(IndexColumn(_)),
+        indexName = IndexName("pk_my_table"),
+        tableName = TableName("testTable")
       )),
-      indexes = Seq(DBTableIndex(
-        indexName = "idx_some_name",
-        tableName = "testTable",
-        indexBy = Seq("column1")
+      indexes = Set(DBSecondaryIndex(
+        indexName = IndexName("idx_some_name"),
+        tableName = TableName("testTable"),
+        columns = Seq("column1").map(IndexColumn(_)),
       ))
     )
   }

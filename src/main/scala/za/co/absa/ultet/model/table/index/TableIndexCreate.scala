@@ -15,21 +15,21 @@
  */
 package za.co.absa.ultet.model.table.index
 
-import za.co.absa.ultet.dbitems.DBTableMember.DBTableIndex
+import za.co.absa.ultet.dbitems.table.DBTableIndex.DBSecondaryIndex
 import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-case class TableIndexCreate(schemaName: SchemaName, tableIndex: DBTableIndex) extends TableAlteration {
+case class TableIndexCreate(schemaName: SchemaName, tableIndex: DBSecondaryIndex) extends TableAlteration {
 
-  override def tableName: TableName = TableName(tableIndex.tableName)
+  override def tableName: TableName = tableIndex.tableName
 
   override def sqlExpression: String = {
     val unique = if(tableIndex.unique) " UNIQUE" else ""
-    val ascDesc = if (tableIndex.ascendingOrder) "ASC" else "DESC"
-    val nullsFirstLast = tableIndex.nullsFirstOverride.map(value => if(value) " NULLS FIRST" else " NULLS LAST").getOrElse("")
 
-    val columns = tableIndex.indexBy.map { colName =>
-      s"$colName $ascDesc$nullsFirstLast"
+    val columns = tableIndex.columns.map{ indexColumn =>
+      val ascDesc = if (indexColumn.ascendingOrder) "ASC" else "DESC"
+      val nullsFirstLast = if (indexColumn.nullsFirst) " NULLS FIRST" else " NULLS LAST"
+      s"${indexColumn.expression} $ascDesc$nullsFirstLast"
     }.mkString(", ")
 
     val nullsDistinct = if (tableIndex.nullsDistinct) "NULLS NOT DISTINCT" else "NULLS DISTINCT"

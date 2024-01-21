@@ -20,11 +20,10 @@ import za.co.absa.balta.classes.setter.{Params, SetterFnc}
 import za.co.absa.balta.classes.{DBConnection, DBQuerySupport, QueryResultRow}
 import za.co.absa.ultet.dbitems.DBTable
 import za.co.absa.ultet.dbitems.table.{DBTableColumn, DBTableIndex}
-import za.co.absa.ultet.dbitems.table.DBTableIndex.{DBPrimaryKey, DBSecondaryIndex, IndexField}
+import za.co.absa.ultet.dbitems.table.DBTableIndex.{DBPrimaryKey, DBSecondaryIndex, IndexColumn}
 import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
-import za.co.absa.ultet.model.table.{ColumnName, TableName}
-
-import scala.io.Source
+import za.co.absa.ultet.model.table.{ColumnName, IndexName, TableName}
+import za.co.absa.ultet.util.ResourceReader
 
 case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConnection) extends DBQuerySupport {
   def extract(implicit schemaName: SchemaName, tableName: TableName): Option[DBTable] = {
@@ -37,11 +36,10 @@ case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConn
     }
   }
 
-
   private def extractDBTable()(implicit schemaName: SchemaName,
                                tableName: TableName,
                                schemaAndTableNameSetters: List[SetterFnc]): Option[(DBTable, Boolean)] = {
-    runQuery(readSQLFileAsString("table_indexes"), schemaAndTableNameSetters){ queryResult =>
+    runQuery(ResourceReader.sql("pg_table_indexes"), schemaAndTableNameSetters){ queryResult =>
       if (queryResult.isEmpty) {
         None
       } else {
@@ -58,11 +56,11 @@ case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConn
     }
   }
   private def extractColumns()(implicit schemaAndTableName: List[SetterFnc]): List[DBTableColumn] = {
-    ???
+    runQuery(ResourceReader.sql("pg_table_columns"), schemaAndTableName)(_.map(queryResultRowToColumn).toList)
   }
 
   private def extractIndexes()(implicit schemaAndTableName: List[SetterFnc]): (Seq[DBSecondaryIndex], Option[DBPrimaryKey]) = {
-    val indexRows = runQuery(readSQLFileAsString("table_indexes"), schemaAndTableName)(_.map(queryResultRowToIndex).toList.groupBy(_.indexName))
+    val indexRows = runQuery(ResourceReader.sql("pg_table_indexes"), schemaAndTableName)(_.map(queryResultRowToIndex).toList.groupBy(_.indexName))
     indexRows.values.foldLeft((List.empty[DBSecondaryIndex], Option.empty[DBPrimaryKey])) { case ((secondaryIndexesAcc, primKeyAcc), indexRows) =>
       indexRows.head match {
         case head: DBPrimaryKey =>
@@ -76,7 +74,7 @@ case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConn
   }
 
   private def queryResultRowToIndex(indexRow: QueryResultRow): DBTableIndex = {
-    def readColumn(): List[IndexField] = List(IndexField(
+    def readColumn(): List[IndexColumn] = List(IndexColumn(
       expression = indexRow.getString("column_expression").get,
       ascendingOrder = indexRow.getBoolean("is_ascending").get,
       nullsFirstDefined = indexRow.getBoolean("nulls_first")
@@ -84,15 +82,15 @@ case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConn
 
     if (indexRow.getBoolean("is_primary").get) {
       DBPrimaryKey(
-        tableName = indexRow.getString("table_name").get,
-        indexName = indexRow.getString("index_name").get,
+        tableName = TableName(indexRow.getString("table_name").get),
+        indexName = IndexName(indexRow.getString("index_name").get),
         columns = readColumn(),
         description = indexRow.getString("description")
       )
     } else {
       DBSecondaryIndex(
-        tableName = indexRow.getString("table_name").get,
-        indexName = indexRow.getString("index_name").get,
+        tableName = TableName(indexRow.getString("table_name").get),
+        indexName = IndexName(indexRow.getString("index_name").get),
         columns = readColumn(),
         description = indexRow.getString("description"),
         unique = indexRow.getBoolean("is_unique").get,
@@ -105,24 +103,11 @@ case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConn
   private def queryResultRowToColumn(columnRow: QueryResultRow): DBTableColumn = {
     DBTableColumn(
       columnName = ColumnName(columnRow.getString("column_name").get),
-      dataType = queryResultRowToDataType(columnRow),
+      dataType = columnRow.getString("data_type").get,
       notNull = columnRow.getBoolean("is_nullable").get,
       description = columnRow.getString("description"),
-      default = columnRow.getString("default")
+      default = columnRow.getString("column_default")
     )
   }
 
-  private def queryResultRowToDataType(columnRow: QueryResultRow): String = {
-    ???
-  }
-
-  private def readSQLFileAsString(sqlFilename: String, lineSeparator: String = "\n"): String = {
-    val filename = s"queries/$sqlFilename.sql"
-    val sourceFile = Source.fromResource(filename)
-    try {
-      sourceFile.getLines().mkString(lineSeparator)
-    } finally {
-      sourceFile.close()
-    }
-  }
 }

@@ -2,11 +2,12 @@ package za.co.absa.ultet.parsers
 
 import cats.syntax.either._
 import io.circe.generic.auto._
-import io.circe.{yaml, Error}
+import io.circe.{Error, yaml}
 import za.co.absa.ultet.dbitems.DBTable
-import za.co.absa.ultet.dbitems.DBTableMember.{DBTableColumn, DBTableIndex, DBTablePrimaryKey}
+import za.co.absa.ultet.dbitems.table.DBTableIndex.{DBPrimaryKey, DBSecondaryIndex, IndexColumn}
+import za.co.absa.ultet.dbitems.table.{DBTableColumn, DBTableIndex}
 import za.co.absa.ultet.model._
-import za.co.absa.ultet.model.table.{TableName, ColumnName}
+import za.co.absa.ultet.model.table.{ColumnName, IndexName, TableName}
 
 import java.net.URI
 import java.nio.file.{Files, Paths}
@@ -61,40 +62,46 @@ object PgTableFileParser {
       )
     }
 
-    private def prepareIndexes: Seq[DBTableIndex] = {
+    private def prepareIndexes: Seq[DBSecondaryIndex] = {
       indexes.map(
         currIndex => {
-          DBTableIndex(
-            currIndex("indexName"),
-            currIndex("tableName"),
-            currIndex("indexBy")
+          DBSecondaryIndex(
+            tableName = TableName(currIndex("tableName")),
+            indexName = IndexName(currIndex("indexName")),
+            columns = currIndex("indexBy")
               .replaceAll("""^\[|\]$""", "")
               .split(",")
-              .map(_.trim),
+              .map(col => IndexColumn(col.trim))
+              .toList,
+            unique = currIndex.getOrElse("unique", "false").toBoolean,
             // todo better all this
-            currIndex.getOrElse("unique", "false").toBoolean,
-            currIndex.getOrElse("ascendingOrder", "true").toBoolean,
-            currIndex.get("nullsFirstOverride").map(_.toBoolean),
-            currIndex.getOrElse("nullsDistinct", "true").toBoolean,
+            //currIndex.getOrElse("ascendingOrder", "true").toBoolean,
+            //currIndex.get("nullsFirstOverride").map(_.toBoolean),
+            nullsDistinct = currIndex.getOrElse("nullsDistinct", "true").toBoolean,
+            description = None,
+            constraint = None
           )
         }
       )
     }
 
-    private def preparePrimaryKey: Option[DBTablePrimaryKey] = {
-      primaryKey.isDefined match {
-        case true =>
-          val cols = primaryKey.get("columns")
-          val pkName = primaryKey.get("name")
+    private def preparePrimaryKey: Option[DBPrimaryKey] = {
+      if (primaryKey.isDefined) {
+        val cols = primaryKey.get("columns")
+        val pkName = primaryKey.get("name")
+        val indexColumns = cols.replaceAll("""^\[|\]$""", "")
+          .split(",")
+          .map(currColName => IndexColumn(currColName.trim))
+          .toList
 
-          val preparedPk = DBTablePrimaryKey(
-            cols.replaceAll("""^\[|\]$""", "")
-              .split(",")
-              .map(currColName => ColumnName(currColName.trim)),
-            Some(pkName)
-          )
-          Some(preparedPk)
-        case _ => None
+        val preparedPk = DBPrimaryKey(
+          TableName(table),
+          IndexName(pkName),
+          indexColumns,
+        )
+        Some(preparedPk)
+      } else {
+        None
       }
     }
 

@@ -16,11 +16,13 @@
 
 package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableCreation, TableEntry, TableName}
+import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableCreation, TableEntry, TableIdentifier, TableName}
 import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
 import za.co.absa.ultet.model.table.index.{TableIndexCreate, TableIndexDrop}
 import za.co.absa.ultet.model.table.alterations.{TableColumnCommentDrop, TableColumnCommentSet, TableColumnDefaultDrop, TableColumnDefaultSet, TableColumnNotNullDrop, TablePrimaryKeyAdd, TablePrimaryKeyDrop}
 import DBTable.ColumnsDifferenceResolver
+import za.co.absa.balta.classes.DBConnection
+import za.co.absa.ultet.dbitems.extractors.DBTableFromPG
 import za.co.absa.ultet.dbitems.table.DBTableIndex.{DBPrimaryKey, DBSecondaryIndex}
 import za.co.absa.ultet.dbitems.table.DBTableColumn
 import za.co.absa.ultet.model.table.column.{TableColumnAdd, TableColumnDrop}
@@ -34,10 +36,13 @@ case class DBTable(
                    primaryDBName: DatabaseName,
                    owner: UserName,
                    description: Option[String] = None,
-                   columns: List[DBTableColumn] = List.empty,
+                   columns: Seq[DBTableColumn] = Seq.empty,
                    primaryKey: Option[DBPrimaryKey] = None,
                    indexes: Set[DBSecondaryIndex] = Set.empty
                    ) {
+
+  val tableIdentifier: TableIdentifier = TableIdentifier(tableName, Some(schemaName))
+
   def addColumn(column: DBTableColumn): DBTable = {
     this.copy(columns = columns ++ Seq(column))
   }
@@ -66,10 +71,11 @@ case class DBTable(
   }
 
   def -(other: DBTable): Seq[TableEntry] = {
+    assert(schemaName == other.schemaName, s"Schema names must match to diff tables, but $schemaName != ${other.schemaName}")
     assert(tableName == other.tableName, s"Table names must match to diff tables, but $tableName != ${other.tableName}")
 
     val removeIndices = this.indexes.diff(other.indexes)
-    val alterationsToRemoveIndices = removeIndices.map(idx => TableIndexDrop(schemaName, tableName, idx.tableName))
+    val alterationsToRemoveIndices = removeIndices.map(idx => TableIndexDrop(schemaName, tableName, idx.tableName.normalized))
 
     val addIndices = other.indexes.diff(this.indexes)
     val alterationsToAddIndices = addIndices.map(idx => TableIndexCreate(schemaName, idx))
@@ -173,19 +179,8 @@ object DBTable {
   def createFromPG(schemaName: SchemaName, tableName: TableName, databaseName: DatabaseName)
                   (implicit jdbcConnection: Option[Connection]): Option[DBTable] = {
     jdbcConnection.flatMap { dbConnection =>
-      val extractor = new ExtractorOfDBTable(schemaName, tableName)(dbConnection)
-      extractor.owner.map { owner =>
-        DBTable(
-          tableName,
-          schemaName,
-          databaseName,
-          UserName(owner),
-          extractor.description,
-          extractor.columns,
-          extractor.primaryKey,
-          extractor.indexes
-        )
-      }
+      val extractor = new DBTableFromPG(databaseName)(new DBConnection(dbConnection))
+      extractor.extract(schemaName, tableName)
     }
   }
 }

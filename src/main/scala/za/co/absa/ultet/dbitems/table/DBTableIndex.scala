@@ -16,29 +16,30 @@
 
 package za.co.absa.ultet.dbitems.table
 
-import za.co.absa.ultet.dbitems.table.DBTableIndex.IndexField
+import za.co.absa.ultet.dbitems.table.DBTableIndex.IndexColumn
+import za.co.absa.ultet.model.table.{IndexName, TableName}
 
 trait DBTableIndex extends DBTableMember {
-  def  tableName: String
-  def indexName: String
-  def columns: List[IndexField]
+  def  tableName: TableName
+  def indexName: IndexName
+  def columns: Seq[IndexColumn]
   def description: Option[String]
 }
 
 object DBTableIndex {
   case class DBPrimaryKey (
-                            tableName: String,
-                            indexName: String,
-                            columns: List[IndexField],
+                            tableName: TableName,
+                            indexName: IndexName,
+                            columns: Seq[IndexColumn],
                             description: Option[String] = None
                           ) extends DBTableIndex {
     private[dbitems] def joinColumns(other: DBTableIndex): DBPrimaryKey = copy(columns = columns ++ other.columns)
   }
 
   case class DBSecondaryIndex (
-                                tableName: String,
-                                indexName: String,
-                                columns: List[IndexField],
+                                tableName: TableName,
+                                indexName: IndexName,
+                                columns: Seq[IndexColumn],
                                 description: Option[String] = None,
                                 unique: Boolean = false,
                                 nullsDistinct: Boolean = true,
@@ -48,19 +49,13 @@ object DBTableIndex {
   }
 
 
-  case class IndexField (
-                         expression: String,
-                         ascendingOrder: Boolean,
-                         nullsFirstDefined: Option[Boolean]
+  case class IndexColumn(
+                         expression: String, // this is not a ColumnName because it can be an expression
+                         ascendingOrder: Boolean = true,
+                         nullsFirstDefined: Option[Boolean] = None
                         ) {
     def nullsFirst: Boolean = {
       nullsFirstDefined.getOrElse(!ascendingOrder)
-    }
-
-    object IndexField {
-      def withNullsFirst(expression: String, ascendingOrder: Boolean, nullsFirst: Boolean): IndexField = {
-        IndexField(expression, ascendingOrder, )
-      }
     }
   }
 }

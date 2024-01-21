@@ -15,14 +15,14 @@
  */
 package za.co.absa.ultet.model.table.alterations
 
-import za.co.absa.ultet.dbitems.DBTableMember.DBTablePrimaryKey
+import za.co.absa.ultet.dbitems.table.DBTableIndex.DBPrimaryKey
 import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 
-case class TablePrimaryKeyDrop(schemaName: SchemaName, tableName: TableName, primaryKey: DBTablePrimaryKey) extends TableAlteration {
+case class TablePrimaryKeyDrop(schemaName: SchemaName, tableName: TableName, primaryKey: DBPrimaryKey) extends TableAlteration {
   override def sqlExpression: String = {
     s"""ALTER TABLE ${schemaName.value}.${tableName.value}
-       |DROP CONSTRAINT ${primaryKey.name};""".stripMargin
+       |DROP CONSTRAINT ${primaryKey.indexName};""".stripMargin
   }
 
   override def orderInTransaction: Int = 211
