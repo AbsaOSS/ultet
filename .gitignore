@@ -18,7 +18,6 @@ syntax: glob
 *.class
 *~
 *.bak
-#*.off
 *.old
 
 # eclipse conf file
@@ -37,6 +36,7 @@ syntax: glob
 .vscode
 
 # building
+.bsp
 target
 build
 null
@@ -55,35 +55,6 @@ build.log
 #  syntax: regexp
 #  ^\.pc/
 
-.cache*
-dependency-reduced-pom.xml
 
-_testOutput
-_tradeOutput
-_tradeData
-_countryMT
-_currencyMT
-_productMT
-_nestedStructs
-myTestCheckpoints
 
-**/main/resources/application.properties
-**/main/resources/application.conf
-**/main/resources/application.yaml
-**/main/resources/application.yml
 
-*.config
-*.keytab
-.DS_Store
-
-node_modules/
-Component-preload.js
-
-# Jekyll auto
-_site
-.sass-cache
-.jekyll-metadata
-
-utils/resources/*.conf
-
-.bsp
