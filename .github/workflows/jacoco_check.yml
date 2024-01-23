@@ -27,7 +27,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - scala: 2.12.17
+          - scala: 2.12.18
             scalaShort: "2.12"
             overall: 0.0
             changed: 80.0

@@ -18,7 +18,7 @@ import Dependencies._
 
 ThisBuild / organization := "za.co.absa.ultet"
 
-lazy val scala212 = "2.12.17"
+lazy val scala212 = "2.12.18"
 
 ThisBuild / scalaVersion := scala212
 
