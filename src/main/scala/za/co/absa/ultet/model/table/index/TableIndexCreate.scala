@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package za.co.absa.ultet.model.table.index
 
 import za.co.absa.ultet.dbitems.table.DBTableIndex.DBSecondaryIndex

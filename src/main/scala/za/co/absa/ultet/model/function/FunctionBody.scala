@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package za.co.absa.ultet.model.function
 
 case class FunctionBody(sqlExpression: String) extends FunctionEntry {
