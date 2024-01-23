@@ -1,5 +1,5 @@
 /*
- * Copyright 2022 ABSA Group Limited
+ * Copyright 2023 ABSA Group Limited
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ import Dependencies._
 
 ThisBuild / organization := "za.co.absa.ultet"
 
-lazy val scala212 = "2.12.17"
+lazy val scala212 = "2.12.18"
 
 ThisBuild / scalaVersion := scala212
 
