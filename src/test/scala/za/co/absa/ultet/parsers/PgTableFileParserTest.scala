@@ -89,7 +89,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
       primaryKey = Some(DBPrimaryKey(
         columns = Seq("id_key_field1", "id_key_field1").map(IndexColumn(_)),
         indexName = IndexName("pk_my_table"),
-        tableName = TableName("testTable")
+        tableName = TableName("testSchema.testTable")
       )),
       indexes = Set(DBSecondaryIndex(
         indexName = IndexName("idx_some_name"),
