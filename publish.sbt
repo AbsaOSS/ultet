@@ -58,7 +58,7 @@ ThisBuild / developers := List(
 ThisBuild / organizationName := "ABSA Group Limited"
 ThisBuild / organizationHomepage := Some(url("https://www.absa.africa"))
 
-ThisBuild / description := "Database deployment tool "
+ThisBuild / description := "Database deployment tool."
 ThisBuild / startYear := Some(2023)
 ThisBuild / licenses += "Apache-2.0" -> url("https://www.apache.org/licenses/LICENSE-2.0.txt")
 ThisBuild / homepage := Some(url("https://github.com/AbsaOSS/ultet"))
