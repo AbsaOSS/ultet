@@ -1,5 +1,3 @@
-package za.co.absa.ultet.dbitems.table
-
 /*
  * Copyright 2023 ABSA Group Limited
  *
@@ -16,8 +14,7 @@ package za.co.absa.ultet.dbitems.table
  * limitations under the License.
  */
 
-import za.co.absa.ultet.model.table.ColumnName
-
+package za.co.absa.ultet.dbitems.table
 trait DBTableMember
 
 
