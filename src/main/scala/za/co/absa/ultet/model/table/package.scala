@@ -27,5 +27,4 @@ package object table {
   case class TableIdentifier(schemaName: SchemaName, tableName: TableName) {
     def fullName: String = s"${schemaName.normalized}.${tableName.normalized}"
   }
-
 }

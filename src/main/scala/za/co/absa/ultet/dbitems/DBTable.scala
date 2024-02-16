@@ -43,6 +43,7 @@ case class DBTable(
 
   def tableName: TableName = tableIdentifier.tableName
 
+
   def addColumn(column: DBTableColumn): DBTable = {
     this.copy(columns = columns ++ Seq(column))
   }
