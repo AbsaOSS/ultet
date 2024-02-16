@@ -4,7 +4,6 @@
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
- *
  *     http://www.apache.org/licenses/LICENSE-2.0
  *
  * Unless required by applicable law or agreed to in writing, software
@@ -14,17 +13,18 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.model.table.alterations
-
-import za.co.absa.ultet.dbitems.table.DBTableIndex.DBPrimaryKey
-import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.model.table.{TableAlteration, TableName}
-
-case class TablePrimaryKeyDrop(schemaName: SchemaName, tableName: TableName, primaryKey: DBPrimaryKey) extends TableAlteration {
-  override def sqlExpression: String = {
-    s"""ALTER TABLE ${schemaName.value}.${tableName.value}
-       |DROP CONSTRAINT ${primaryKey.indexName};""".stripMargin
-  }
-
-  override def orderInTransaction: Int = 211
-}
+/**
+ * A query that returns properties of a table chosen by its name and schema.
+ */
+ SELECT N.nspname AS schema_name,
+       T.relname AS table_name,
+       pg_get_userbyid(T.relowner) AS table_owner,
+       T.relhasindex AS has_indexes,
+       D.description
+FROM pg_class T
+         INNER JOIN pg_namespace N ON N.oid = T.relnamespace
+         LEFT JOIN pg_description D ON D.objoid = T.oid AND D.objsubid = 0
+WHERE
+    T.relkind = ANY (ARRAY['r'::"char", 'p'::"char"])
+    AND N.nspname = ?
+    AND T.relname = ?;

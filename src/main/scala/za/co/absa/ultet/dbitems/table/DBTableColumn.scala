@@ -14,17 +14,15 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.model.table.alterations
+package za.co.absa.ultet.dbitems.table
 
-import za.co.absa.ultet.dbitems.table.DBTableIndex.DBPrimaryKey
-import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.model.table.{TableAlteration, TableName}
+import za.co.absa.ultet.model.table.ColumnName
 
-case class TablePrimaryKeyDrop(schemaName: SchemaName, tableName: TableName, primaryKey: DBPrimaryKey) extends TableAlteration {
-  override def sqlExpression: String = {
-    s"""ALTER TABLE ${schemaName.value}.${tableName.value}
-       |DROP CONSTRAINT ${primaryKey.indexName};""".stripMargin
-  }
-
-  override def orderInTransaction: Int = 211
-}
+case class DBTableColumn(
+                          columnName: ColumnName,
+                          dataType: String,
+                          notNull: Boolean,
+                          description: Option[String] = None,
+                          default: Option[String] = None
+                        )
+  extends DBTableMember

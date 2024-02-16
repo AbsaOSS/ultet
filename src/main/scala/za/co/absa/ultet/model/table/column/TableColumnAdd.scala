@@ -16,8 +16,7 @@
 
 package za.co.absa.ultet.model.table.column
 
-import za.co.absa.ultet.dbitems.DBTableMember.DBTableColumn
-import za.co.absa.ultet.model
+import za.co.absa.ultet.dbitems.table.DBTableColumn
 import za.co.absa.ultet.model.SchemaName
 import za.co.absa.ultet.model.table.{TableAlteration, TableName}
 

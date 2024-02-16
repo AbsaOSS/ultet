@@ -15,7 +15,8 @@
  */
 
 package za.co.absa.ultet.model.table
-import za.co.absa.ultet.dbitems.DBTableMember.{DBTableColumn, DBTableIndex, DBTablePrimaryKey}
+
+import za.co.absa.ultet.dbitems.table.DBTableColumn
 import za.co.absa.ultet.model.SchemaName
 
 case class TableCreation(

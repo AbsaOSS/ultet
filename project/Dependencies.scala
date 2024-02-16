@@ -17,18 +17,33 @@
 import sbt._
 
 object Dependencies {
+
+  object Versions {
+    val scalactic = "3.2.17"
+    val scopt = "4.1.0"
+    val config = "1.4.2"
+    val logback = "1.4.7"
+    val scalaLogging = "3.9.5"
+    val postgresql = "42.6.0"
+    val circe = "0.14.2"
+    val balta = "0.1.0"
+    val scalatest = "3.2.17"
+  }
+
   lazy val coreDependencies: Seq[ModuleID] = Seq(
-    "org.scalactic" %% "scalactic" % "3.2.17",
-    "org.scalatest" %% "scalatest" % "3.2.17" % "test",
-    "com.github.scopt" %% "scopt" % "4.1.0",
-    "com.typesafe" % "config" % "1.4.2",
-    "ch.qos.logback" % "logback-classic" % "1.4.7",
-    "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
-    "org.postgresql" % "postgresql" % "42.6.0",
-    "io.circe" %% "circe-yaml" % "0.14.2",
-    "io.circe" %% "circe-core" % "0.14.2",
-    "io.circe" %% "circe-generic" % "0.14.2",
-    "io.circe" %% "circe-parser" % "0.14.2",
-    "io.circe" %% "circe-generic-extras" % "0.14.2"
+    "org.scalactic"               %%  "scalactic"             % Versions.scalactic,
+    "com.github.scopt"            %%  "scopt"                 % Versions.scopt,
+    "com.typesafe"                %   "config"                % Versions.config,
+    "ch.qos.logback"              %   "logback-classic"       % Versions.logback,
+    "com.typesafe.scala-logging"  %%  "scala-logging"         % Versions.scalaLogging,
+    "org.postgresql"              %   "postgresql"            % Versions.postgresql,
+    "io.circe"                    %%  "circe-yaml"            % Versions.circe,
+    "io.circe"                    %%  "circe-core"            % Versions.circe,
+    "io.circe"                    %%  "circe-generic"         % Versions.circe,
+    "io.circe"                    %%  "circe-parser"          % Versions.circe,
+    "io.circe"                    %%  "circe-generic-extras"  % Versions.circe,
+    "za.co.absa"                  %%  "balta"                 % Versions.balta,
+
+    "org.scalatest"               %%  "scalatest"             % Versions.scalatest  % "test",
   )
 }

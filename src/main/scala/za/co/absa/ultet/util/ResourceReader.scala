@@ -14,17 +14,20 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.model.table.alterations
+package za.co.absa.ultet.util
 
-import za.co.absa.ultet.dbitems.table.DBTableIndex.DBPrimaryKey
-import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.model.table.{TableAlteration, TableName}
+import scala.io.Source
 
-case class TablePrimaryKeyDrop(schemaName: SchemaName, tableName: TableName, primaryKey: DBPrimaryKey) extends TableAlteration {
-  override def sqlExpression: String = {
-    s"""ALTER TABLE ${schemaName.value}.${tableName.value}
-       |DROP CONSTRAINT ${primaryKey.indexName};""".stripMargin
+object ResourceReader {
+  private val lineSeparator = "\n"
+
+  def sql(sqlName: String): String = {
+    val filename = s"queries/$sqlName.sql"
+    val sourceFile = Source.fromResource(filename)
+    try {
+      sourceFile.getLines().mkString(lineSeparator)
+    } finally {
+      sourceFile.close()
+    }
   }
-
-  override def orderInTransaction: Int = 211
 }
