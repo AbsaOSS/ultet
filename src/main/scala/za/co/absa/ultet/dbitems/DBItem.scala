@@ -16,7 +16,7 @@
 
 package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.model.{SQLEntry, SchemaName}
+import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup}
 import za.co.absa.ultet.parsers.PgFunctionFileParser
 
 import java.net.URI
@@ -27,36 +27,6 @@ trait DBItem {
 }
 
 object DBItem {
-  def createDBItems(filePathsPerSchema: Map[SchemaName, Seq[URI]])
-                   (implicit jdbcConnection: Connection): Set[DBItem] = {
-    val schemas = filePathsPerSchema.keys
-    val SchemasWithFilesGroupedByType(tables, functions, owners) = groupAllFilesPerSchemaByType(filePathsPerSchema)
-
-    // TODO handle tables
-
-    val dbFunctionsFromSource = functions
-      .values
-      .flatten
-      .map(PgFunctionFileParser().parseFile)
-      .toSet
-    val dbFunctionsFromPG = functions
-      .keys
-      .flatMap(DBFunctionFromPG.fetchAllOfSchema)
-      .toSet
-
-    val users: Set[DBItem] = dbFunctionsFromSource.flatMap(f => f.users :+ f.owner).map(DBUser)
-
-    val schemaOwners = owners.mapValues(DBSchema.parseTxtFileContainingSchemaOwner)
-    val schemaUsers = dbFunctionsFromSource.groupBy(_.schema).mapValues(_.toSeq.map(_.users).flatten.toSet)
-
-    val dbSchemas = schemas.toSet.map { (s: SchemaName) =>
-      val owner = schemaOwners(s)
-      val users = schemaUsers(s) + owner
-      DBSchema(s, owner, users.toSeq)
-    }
-
-    dbFunctionsFromSource ++ dbFunctionsFromPG ++ users ++ dbSchemas
-  }
 
   private case class SchemasWithFilesGroupedByType(
                                                     tables: Map[SchemaName, Seq[URI]],
@@ -71,7 +41,7 @@ object DBItem {
     ownerFiles.foreach { case (schemaName, uris) =>
       if (uris.size > 1) throw new IllegalArgumentException(
         s"Detected more than one .txt file in schema ${schemaName.normalized}"
-      ) else if (uris.size == 0) throw new IllegalArgumentException(
+      ) else if (uris.isEmpty) throw new IllegalArgumentException(
         s".txt file in schema ${schemaName.normalized} not found"
       )
     }

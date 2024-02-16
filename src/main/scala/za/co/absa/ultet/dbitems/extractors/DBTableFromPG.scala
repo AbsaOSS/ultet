@@ -22,7 +22,7 @@ import za.co.absa.ultet.dbitems.DBTable
 import za.co.absa.ultet.dbitems.table.{DBTableColumn, DBTableIndex}
 import za.co.absa.ultet.dbitems.table.DBTableIndex.{DBPrimaryKey, DBSecondaryIndex, IndexColumn}
 import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
-import za.co.absa.ultet.model.table.{ColumnName, IndexName, TableName}
+import za.co.absa.ultet.model.table.{ColumnName, IndexName, TableIdentifier, TableName}
 import za.co.absa.ultet.util.ResourceReader
 
 case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConnection) extends DBQuerySupport {
@@ -31,7 +31,7 @@ case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConn
     extractDBTable().map {case (dbTable, hasIndexes) =>
 
       val columns = extractColumns()
-      val (secondaryIndexes, primaryKey) = if (hasIndexes) extractIndexes() else (List.empty, None)
+      val (secondaryIndexes, primaryKey) = if (hasIndexes) extractIndexes(dbTable.tableIdentifier) else (List.empty, None)
       dbTable.copy(columns = columns, primaryKey = primaryKey, indexes = secondaryIndexes.toSet)
     }
   }
@@ -59,8 +59,10 @@ case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConn
     runQuery(ResourceReader.sql("pg_table_columns"), schemaAndTableName)(_.map(queryResultRowToColumn).toList)
   }
 
-  private def extractIndexes()(implicit schemaAndTableName: List[SetterFnc]): (Seq[DBSecondaryIndex], Option[DBPrimaryKey]) = {
-    val indexRows = runQuery(ResourceReader.sql("pg_table_indexes"), schemaAndTableName)(_.map(queryResultRowToIndex).toList.groupBy(_.indexName))
+  private def extractIndexes(tableIdentifier: TableIdentifier)(implicit schemaAndTableName: List[SetterFnc]): (Seq[DBSecondaryIndex], Option[DBPrimaryKey]) = {
+    val indexRows = runQuery(ResourceReader.sql("pg_table_indexes"), schemaAndTableName){queryResult =>
+      queryResult.map(queryResultRowToIndex(_, tableIdentifier)).toList.groupBy(_.indexName)
+    }
     indexRows.values.foldLeft((List.empty[DBSecondaryIndex], Option.empty[DBPrimaryKey])) { case ((secondaryIndexesAcc, primKeyAcc), indexRows) =>
       indexRows.head match {
         case head: DBPrimaryKey =>
@@ -73,7 +75,7 @@ case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConn
     }
   }
 
-  private def queryResultRowToIndex(indexRow: QueryResultRow): DBTableIndex = {
+  private def queryResultRowToIndex(indexRow: QueryResultRow, tableIdentifier: TableIdentifier): DBTableIndex = {
     def readColumn(): List[IndexColumn] = List(IndexColumn(
       expression = indexRow.getString("column_expression").get,
       ascendingOrder = indexRow.getBoolean("is_ascending").get,
@@ -82,14 +84,14 @@ case class DBTableFromPG(databaseName: DatabaseName)(implicit connection: DBConn
 
     if (indexRow.getBoolean("is_primary").get) {
       DBPrimaryKey(
-        tableName = TableName(indexRow.getString("table_name").get),
+        tableIdentifier = tableIdentifier,
         indexName = IndexName(indexRow.getString("index_name").get),
         columns = readColumn(),
         description = indexRow.getString("description")
       )
     } else {
       DBSecondaryIndex(
-        tableName = TableName(indexRow.getString("table_name").get),
+        tableIdentifier = tableIdentifier,
         indexName = IndexName(indexRow.getString("index_name").get),
         columns = readColumn(),
         description = indexRow.getString("description"),

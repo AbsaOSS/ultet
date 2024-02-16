@@ -19,7 +19,7 @@ package za.co.absa.ultet.model.schema
 import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup, UserName}
 import za.co.absa.ultet.model.TransactionGroup.TransactionGroup
 
-case class SchemaGrant(name: SchemaName, roles: Seq[UserName]) extends SQLEntry {
+case class SchemaGrant(name: SchemaName, roles: Set[UserName]) extends SQLEntry {
   override def sqlExpression: String = {
     s"GRANT USAGE ON SCHEMA ${name.value} TO ${roles.map(_.value).mkString(", ")};"
   }

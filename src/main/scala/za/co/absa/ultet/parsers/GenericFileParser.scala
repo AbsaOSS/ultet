@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.model.table.alterations
+package za.co.absa.ultet.parsers
 
-import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableIdentifier}
+import za.co.absa.ultet.util.FileReader
 
-case class TableColumnCommentDrop(tableIdentifier: TableIdentifier, columnName: ColumnName) extends TableAlteration {
-  override def sqlExpression: String = {
-    s"""COMMENT ON COLUMN ${tableIdentifier.fullName}.${columnName.normalized}
-       |IS NULL;""".stripMargin
+import java.net.URI
+
+trait GenericFileParser[T] {
+  def parseFile(fileUri: URI): Set[T] = {
+    parseSource(FileReader.readFileAsString(fileUri))
   }
 
-  override def orderInTransaction: Int = 250
+  def parseSource(lines: Seq[String]): Set[T] = {
+    parseSource(lines.mkString("\n"))
+  }
+
+  def parseSource(source: String): Set[T]
 }

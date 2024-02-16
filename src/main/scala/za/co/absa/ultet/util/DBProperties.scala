@@ -17,8 +17,10 @@
 package za.co.absa.ultet.util
 
 import com.typesafe.config.ConfigFactory
+import za.co.absa.balta.classes.DBConnection
 
 import java.io.File
+import java.sql.DriverManager
 import scala.collection.convert.ImplicitConversions.`collection AsScalaIterable`
 
 // Example of the connection string
@@ -43,6 +45,15 @@ case class DBProperties(serverName: String,
                         password: String,
                         protocol: String = "jdbc",
                         subprotocol: String = "postgresql") {
+
+  lazy val dbConnection: DBConnection = createConnection()
+
+  private def createConnection(): DBConnection = {
+    val connectionString = generateConnectionString()
+    val connection = DriverManager.getConnection(connectionString, user, password)
+    new DBConnection(connection)
+  }
+
   def generateConnectionString(): String = {
     subprotocol match {
       case "postgresql" => getPostgresString

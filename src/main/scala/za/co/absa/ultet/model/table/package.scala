@@ -24,19 +24,8 @@ package object table {
 
   case class IndexName(value: String) extends DBObjectName(value)
 
-  case class TableIdentifier(tableName: TableName, schemaName: Option[SchemaName] = None) {
-    def fullName: String = {
-      schemaName.map(s => s"${s.normalized}.").getOrElse("") + tableName.normalized
-    }
+  case class TableIdentifier(schemaName: SchemaName, tableName: TableName) {
+    def fullName: String = s"${schemaName.normalized}.${tableName.normalized}"
   }
 
-  object TableIdentifier {
-    def apply(tableName: String, schemaName: String): TableIdentifier = {
-      if (schemaName.isEmpty) {
-        new TableIdentifier(TableName(tableName))
-      } else {
-        new TableIdentifier(TableName(tableName), Some(SchemaName(schemaName)))
-      }
-    }
-  }
 }

@@ -17,17 +17,17 @@
 package za.co.absa.ultet.model.table.column
 
 import za.co.absa.ultet.dbitems.table.DBTableColumn
-import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.model.table.{TableAlteration, TableName}
+import za.co.absa.ultet.model.table.{TableAlteration, TableIdentifier}
 
-case class TableColumnAdd(schemaName: SchemaName, tableName: TableName, tableColumn: DBTableColumn) extends TableAlteration {
+case class TableColumnAdd(tableIdentifier: TableIdentifier, tableColumn: DBTableColumn) extends TableAlteration {
 
   override def sqlExpression: String = {
     val default = tableColumn.default.map(value => s" DEFAULT $value").getOrElse("")
     val notNull = if (tableColumn.notNull) " NOT NULL" else ""
-    // todo description?
 
-    s"""ALTER TABLE $tableName
+    //TODO #38 Table comments need escaping
+
+    s"""ALTER TABLE ${tableIdentifier.fullName}
     | ADD ${tableColumn.columnName} ${tableColumn.dataType}$default$notNull
     | ;""".stripMargin
   }

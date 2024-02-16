@@ -16,12 +16,11 @@
 
 package za.co.absa.ultet.model.table.column
 
-import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableName}
+import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableIdentifier}
 
-case class TableColumnDrop(schemaName: SchemaName, tableName: TableName, columnName: ColumnName) extends TableAlteration {
+case class TableColumnDrop(tableIdentifier: TableIdentifier, columnName: ColumnName) extends TableAlteration {
   override def sqlExpression: String = {
-    s"""ALTER TABLE ${schemaName.value}.${tableName.value} DROP COLUMN ${columnName.value};"""
+    s"""ALTER TABLE ${tableIdentifier.fullName} DROP COLUMN ${columnName.value};"""
   }
 
   override def orderInTransaction: Int = 280

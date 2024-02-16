@@ -18,113 +18,68 @@ package za.co.absa.ultet
 
 import com.typesafe.scalalogging.Logger
 import scopt.OParser
+import za.co.absa.balta.classes.DBConnection
 import za.co.absa.ultet.dbitems.DBItem
-import za.co.absa.ultet.model.{SQLEntry, SchemaName, TransactionGroup}
-import za.co.absa.ultet.util.{CliParser, Config, DBProperties}
+import za.co.absa.ultet.implicits.MapImplicits.SqlEntriesPerTransactionEnhancement
+import za.co.absa.ultet.implicits.OptionImplicits.OptionEnhancements
+import za.co.absa.ultet.model.{DBAppModel, DatabaseName, SQLEntry, TransactionGroup}
+import za.co.absa.ultet.util.FileReader.SchemaFiles
+import za.co.absa.ultet.util.{CliParser, Config, DBProperties, FileReader, SqlEntriesPerTransaction, SqlExecutor, SqlsPerTransaction, TaskConfig}
 
-import java.net.URI
-import java.nio.file._
-import scala.collection.JavaConverters._
 import java.sql.{Connection, DriverManager, ResultSet}
 import scala.util.{Failure, Success, Try}
 
 object Ultet {
   private val logger = Logger(getClass.getName)
 
-  private def extractSQLEntries(dbItems: Set[DBItem]): Seq[SQLEntry] = {
-    dbItems.toSeq.flatMap { item => item.sqlEntries }
-  }
-
-  private def runEntries(entries: Seq[SQLEntry], dryRun: Boolean = false)(implicit connection: Connection): Unit = {
-    if(dryRun) entries.map(_.sqlExpression).foreach(println)
-    else {
-      val resultSets: Seq[ResultSet] = runTransaction(connection, entries)
-
-      for (resultSet <- resultSets) {
-        val numColumns = resultSet.getMetaData.getColumnCount
-        while (resultSet.next()) {
-          val row = (1 to numColumns).map(col => resultSet.getString(col))
-          logger.info(row.mkString(", "))
-        }
-        resultSet.close()
-      }
-    }
-  }
-
-  def runTransaction(connection: Connection, entries: Seq[SQLEntry]): Seq[ResultSet] = {
-    val autoCommitOriginalStatus = connection.getAutoCommit
-    connection.setAutoCommit(false)
-
-    val resultSets = Try {
-      entries.foldLeft(List[ResultSet]()) { case (acc, entry) =>
-        val statement = connection.createStatement()
-        statement.execute(entry.sqlExpression)
-        val ret: List[ResultSet] = acc :+ statement.getResultSet
-        statement.close()
-        ret
-      }
-    } match {
-      case Success(resultSets) =>
-        connection.commit()
-        resultSets
-      case Failure(exception) =>
-        connection.rollback()
-        connection.close()
-        throw new Exception("Script execution failed", exception)
-    }
-
-    connection.setAutoCommit(autoCommitOriginalStatus)
-    resultSets
-  }
-
-  def sortEntries(entries: Seq[SQLEntry]): Map[TransactionGroup.Value, Seq[SQLEntry]] = {
-    entries
-      .groupBy(_.transactionGroup)
-      .mapValues(_.sortBy(_.orderInTransaction))
-  }
-
-  private def listChildPaths(path: Path): List[Path] = Files.list(path)
-    .iterator()
-    .asScala
-    .toList
-
-  def listFileURIsPerSchema(pathString: String): Map[SchemaName, List[URI]] = {
-    val path = Paths.get(pathString)
-    val schemaPaths = listChildPaths(path)
-    schemaPaths
-      .map(p => SchemaName(p.getFileName.toString) -> listChildPaths(p))
-      .toMap
-      .mapValues(_.map(_.toUri))
-  }
-
   def main(args: Array[String]): Unit = {
-    val config = OParser.parse(CliParser.parser, args, Config()) match {
-      case Some(config) => config
-      case _ => throw new Exception("Failed to load arguments")
+
+    implicit val (appConfig: Config, taskConfig: TaskConfig) = init(args)
+
+    val sourceURIsPerSchema: SchemaFiles = FileReader.listFileURIsPerSchema(appConfig.sourceFilesRootPath)
+    val databaseTransactionSqls = DBAppModel
+      .loadFromSources(sourceURIsPerSchema)
+      .addDatabasesAnalysis()(taskConfig)
+      .createSQLEntries()
+      .map { case (dbName, sqlEntries) => dbName -> sqlEntries.toSql }
+
+    if (appConfig.dryRun) print(databaseTransactionSqls)
+    else execute(databaseTransactionSqls)
+  }
+
+  private def init(args: Array[String]): (Config, TaskConfig) = {
+    val appConfig = OParser.parse(CliParser.parser, args, Config()).getOrThrow(new Exception("Failed to load arguments"))
+    val defaultDB = DBProperties.loadProperties(appConfig.dbConnectionPropertiesPath)
+    val taskConfig = TaskConfig(DatabaseName(defaultDB.database), Set(defaultDB))
+    (appConfig, taskConfig)
+  }
+
+  private def execute(databaseTransactionSqls: Map[DatabaseName, SqlsPerTransaction])(implicit taskConfig: TaskConfig): Unit = {
+    def executeDatabase(databaseName: DatabaseName, sqls: SqlsPerTransaction): Unit = {
+      logger.info(s"Executing against database: ${databaseName.value}")
+      val transactionGroups = TransactionGroup.values.toList // going over transaction groups in their logical order
+      implicit val dbConnection: DBConnection = taskConfig.dbConnections(databaseName).dbConnection
+      transactionGroups.foreach(sqls.get(_).foreach(SqlExecutor.execute(_)))
     }
 
-    val dbProperties = DBProperties.loadProperties(config.dbConnectionPropertiesPath)
-    val dbPropertiesSys = DBProperties.getSysDB(dbProperties)
-    val dbConnection: String = dbProperties.generateConnectionString()
-    implicit val jdbcConnection: Connection = DriverManager.getConnection(
-      dbConnection, dbProperties.user, dbProperties.password
-    )
-
-    val sourceURIsPerSchema: Map[SchemaName, List[URI]] = listFileURIsPerSchema(config.sourceFilesRootPath)
-
-    val dbItems: Set[DBItem] = DBItem.createDBItems(sourceURIsPerSchema)
-    val entries: Seq[SQLEntry] = extractSQLEntries(dbItems)
-    val orderedEntries = sortEntries(entries)
-    val databaseEntries = orderedEntries.getOrElse(TransactionGroup.Databases, Seq.empty)
-    val roleEntries = orderedEntries.getOrElse(TransactionGroup.Roles, Seq.empty)
-    val objectEntries = orderedEntries.getOrElse(TransactionGroup.Objects, Seq.empty)
-    val indexEntries = orderedEntries.getOrElse(TransactionGroup.Indexes, Seq.empty)
-
-    if (databaseEntries.nonEmpty) runEntries(databaseEntries, config.dryRun)
-    if (roleEntries.nonEmpty) runEntries(roleEntries, config.dryRun)
-    if (objectEntries.nonEmpty) runEntries(objectEntries, config.dryRun)
-    if (indexEntries.nonEmpty) runEntries(indexEntries, config.dryRun)
-
-    jdbcConnection.close()
+    databaseTransactionSqls.foreach { case (dbName, entries) => executeDatabase(dbName, entries) }
   }
+
+  private def print(databaseTransactionSqls: Map[DatabaseName, SqlsPerTransaction]): Unit = {
+    def printDatabase(databaseName: DatabaseName, sqls: SqlsPerTransaction): Unit = {
+      val transactionGroups = TransactionGroup.values.toList // going over transaction groups in their logical order
+
+      val delimiter = "================================================================================"
+      val prefix = "= Database: "
+      val suffix = "="
+      val space = " " * (delimiter.length - prefix.length - databaseName.value.length - suffix.length)
+      println(delimiter)
+      println(s"$prefix${databaseName.value}$space$suffix")
+      println(s"$delimiter\n")
+      transactionGroups.foreach(sqls.get(_).foreach(_.foreach(println)))
+    }
+
+    databaseTransactionSqls.foreach { case (dbName, entries) => printDatabase(dbName, entries) }
+  }
+
 }

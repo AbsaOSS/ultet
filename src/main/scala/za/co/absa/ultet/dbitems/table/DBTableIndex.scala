@@ -17,10 +17,10 @@
 package za.co.absa.ultet.dbitems.table
 
 import za.co.absa.ultet.dbitems.table.DBTableIndex.IndexColumn
-import za.co.absa.ultet.model.table.{IndexName, TableName}
+import za.co.absa.ultet.model.table.{IndexName, TableIdentifier, TableName}
 
 trait DBTableIndex extends DBTableMember {
-  def  tableName: TableName
+  def  tableIdentifier: TableIdentifier
   def indexName: IndexName
   def columns: Seq[IndexColumn]
   def description: Option[String]
@@ -28,7 +28,7 @@ trait DBTableIndex extends DBTableMember {
 
 object DBTableIndex {
   case class DBPrimaryKey (
-                            tableName: TableName,
+                            tableIdentifier: TableIdentifier,
                             indexName: IndexName,
                             columns: Seq[IndexColumn],
                             description: Option[String] = None
@@ -37,7 +37,7 @@ object DBTableIndex {
   }
 
   case class DBSecondaryIndex (
-                                tableName: TableName,
+                                tableIdentifier: TableIdentifier,
                                 indexName: IndexName,
                                 columns: Seq[IndexColumn],
                                 description: Option[String] = None,

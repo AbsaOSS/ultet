@@ -17,12 +17,9 @@
 package za.co.absa.ultet.model.table.index
 
 import za.co.absa.ultet.dbitems.table.DBTableIndex.DBSecondaryIndex
-import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.model.table.{TableAlteration, TableName}
+import za.co.absa.ultet.model.table.{TableAlteration, TableIdentifier, TableName}
 
-case class TableIndexCreate(schemaName: SchemaName, tableIndex: DBSecondaryIndex) extends TableAlteration {
-
-  override def tableName: TableName = tableIndex.tableName
+case class TableIndexCreate(tableIdentifier: TableIdentifier, tableIndex: DBSecondaryIndex) extends TableAlteration {
 
   override def sqlExpression: String = {
     val unique = if(tableIndex.unique) " UNIQUE" else ""
@@ -35,7 +32,7 @@ case class TableIndexCreate(schemaName: SchemaName, tableIndex: DBSecondaryIndex
 
     val nullsDistinct = if (tableIndex.nullsDistinct) "NULLS NOT DISTINCT" else "NULLS DISTINCT"
 
-      s"""CREATE$unique INDEX CONCURRENTLY ${tableIndex.indexName} ON ${schemaName.value}.${tableName.value} ($columns) $nullsDistinct;"""
+      s"""CREATE$unique INDEX CONCURRENTLY ${tableIndex.indexName} ON ${tableIdentifier.fullName} ($columns) $nullsDistinct;"""
   }
 
   override def orderInTransaction: Int = 270

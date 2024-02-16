@@ -19,13 +19,12 @@ package za.co.absa.ultet.model.table
 import za.co.absa.ultet.model.{SchemaName, UserName}
 
 case class TableOwnership(
-  schemaName: SchemaName,
-  tableName: TableName,
-  owner: UserName
+                           tableIdentifier: TableIdentifier,
+                           owner: UserName
 ) extends TableAlteration {
 
   override def sqlExpression: String = {
-    s"""ALTER TABLE ${schemaName.value}.${tableName.value} OWNER TO ${owner.value};"""
+    s"""ALTER TABLE ${tableIdentifier.fullName} OWNER TO ${owner.value};"""
   }
 
   override def orderInTransaction: Int = 201

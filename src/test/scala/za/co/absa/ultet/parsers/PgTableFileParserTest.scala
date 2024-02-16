@@ -6,14 +6,16 @@ import za.co.absa.ultet.dbitems.DBTable
 import za.co.absa.ultet.dbitems.table.DBTableColumn
 import za.co.absa.ultet.dbitems.table.DBTableIndex.{DBPrimaryKey, DBSecondaryIndex, IndexColumn}
 import za.co.absa.ultet.model._
-import za.co.absa.ultet.model.table.{ColumnName, IndexName, TableName}
-import za.co.absa.ultet.parsers.PgTableFileParser.DBTableFromYaml
+import za.co.absa.ultet.model.table.{ColumnName, IndexName, TableIdentifier, TableName}
+import za.co.absa.ultet.parsers.helpers.DBTableFromYaml
 
 class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 
+  private val schemaName = SchemaName("testSchema")
+
   "PgTableFileParserTest" should "return semi-prepared object table from example content" in {
     val tableString =
-      """table: testSchema.testTable
+      """table: testTable
         |description: Some Description of this madness
         |primaryDBName: primaryDB
         |owner: some_owner_user
@@ -30,8 +32,8 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         |    indexBy: "[column1]"
         |""".stripMargin
 
-    PgTableFileParser().parseContentYaml(tableString) shouldBe DBTableFromYaml(
-      table = "testSchema.testTable",
+    PgTableFileParser(schemaName).processYaml(tableString) shouldBe DBTableFromYaml(
+      table = "testTable",
       description = Some("Some Description of this madness"),
       primaryDBName = "primaryDB",
       owner = "some_owner_user",
@@ -56,7 +58,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 
   "PgTableFileParserTest" should "return well-prepared table object from example content" in {
     val tableString =
-      """table: testSchema.testTable
+      """table: testTable
         |description: Some Description of this madness
         |primaryDBName: primaryDB
         |owner: some_owner_user
@@ -73,7 +75,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         |    indexBy: "[column1]"
         |""".stripMargin
 
-    PgTableFileParser().parseContentYaml(tableString).convertToDBTable shouldBe DBTable(
+    PgTableFileParser(schemaName).parseSource(tableString).head shouldBe DBTable(
       tableName = TableName("testTable"),
       schemaName = SchemaName("testSchema"),
       description = Some("Some Description of this madness"),
@@ -87,21 +89,21 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         ),
       ),
       primaryKey = Some(DBPrimaryKey(
+        tableIdentifier = TableIdentifier(SchemaName("testSchema"), TableName("testTable")),
         columns = Seq("id_key_field1", "id_key_field1").map(IndexColumn(_)),
-        indexName = IndexName("pk_my_table"),
-        tableName = TableName("testSchema.testTable")
+        indexName = IndexName("pk_my_table")
       )),
       indexes = Set(DBSecondaryIndex(
+        tableIdentifier = TableIdentifier(SchemaName("testSchema"), TableName("testTable")),
         indexName = IndexName("idx_some_name"),
-        tableName = TableName("testTable"),
-        columns = Seq("column1").map(IndexColumn(_)),
+        columns = Seq("column1").map(IndexColumn(_))
       ))
     )
   }
 
   "PgTableFileParserTest" should "return semi-prepared object table from example content, some attributes empty" in {
     val tableString =
-      """table: testSchema.testTable
+      """table: testTable
         |description: Some Description of this madness
         |primaryDBName: primaryDB
         |owner: some_owner_user
@@ -110,8 +112,8 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         |indexes: []
         |""".stripMargin
 
-    PgTableFileParser().parseContentYaml(tableString) shouldBe DBTableFromYaml(
-      table = "testSchema.testTable",
+    PgTableFileParser(schemaName).processYaml(tableString) shouldBe DBTableFromYaml(
+      table = "testTable",
       description = Some("Some Description of this madness"),
       primaryDBName = "primaryDB",
       owner = "some_owner_user",
@@ -120,7 +122,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 
   "PgTableFileParserTest" should "return well-prepared object table from example content, some attributes empty" in {
     val tableString =
-      """table: testSchema.testTable
+      """table: testTable
         |description: Some Description of this madness
         |primaryDBName: primaryDB
         |owner: some_owner_user
@@ -129,7 +131,7 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
         |indexes: []
         |""".stripMargin
 
-    PgTableFileParser().parseContentYaml(tableString).convertToDBTable shouldBe DBTable(
+    PgTableFileParser(schemaName).parseSource(tableString).head shouldBe DBTable(
       tableName = TableName("testTable"),
       schemaName = SchemaName("testSchema"),
       description = Some("Some Description of this madness"),

@@ -14,15 +14,18 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.model.table.alterations
+package za.co.absa.ultet.implicits
 
-import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableIdentifier}
-
-case class TableColumnCommentDrop(tableIdentifier: TableIdentifier, columnName: ColumnName) extends TableAlteration {
-  override def sqlExpression: String = {
-    s"""COMMENT ON COLUMN ${tableIdentifier.fullName}.${columnName.normalized}
-       |IS NULL;""".stripMargin
+object OptionImplicits {
+  implicit class OptionEnhancements[T](val option: Option[T]) extends AnyVal {
+    /**
+      * Gets the `option` value or throws the provided exception
+      *
+      * @param exception the exception to throw in case the `option` is None
+      * @return
+      */
+    def getOrThrow(exception: => Throwable): T = {
+      option.getOrElse(throw exception)
+    }
   }
-
-  override def orderInTransaction: Int = 250
 }

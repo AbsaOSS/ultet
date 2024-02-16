@@ -26,35 +26,35 @@ import java.nio.file.{Files, Paths}
 import java.util.stream.Collectors
 
 case class DBSchema(name: SchemaName,
-                    ownerName: UserName,
-                    users: Seq[UserName]) extends DBItem {
+                    ownerName: Option[UserName],
+                    users: Set[UserName]) extends DBItem {
   override def sqlEntries: Seq[SQLEntry] = {
     if (DO_NOT_TOUCH.contains(name.value)) {
-      throw new Exception(s"Schema ${name.value} is not allow to be referenced")
+      throw new Exception(s"Schema ${name.value} is not allow to be referenced") //TODO  #31 Add warnings to the system
     }
 
     if (DO_NOT_CHOWN.contains(name.value)){
-      logger.warn(s"Schema ${name.value} is not allowed to change owner")
+      logger.warn(s"Schema ${name.value} is not allowed to change owner") //TODO  #31 Add warnings to the system
       Seq(
         SchemaCreate(name),
         SchemaGrant(name, users)
       )
     } else {
-      Seq(
-        SchemaCreate(name),
-        SchemaOwner(name, ownerName),
-        SchemaGrant(name, users)
-      )
+      ownerName.map{SchemaOwner(name, _)}.toSeq ++
+        Seq(
+          SchemaCreate(name),
+          SchemaGrant(name, users)
+        )
     }
   }
 }
 
 object DBSchema {
   private val logger = Logger(getClass.getName)
-  
+
   val DO_NOT_TOUCH: Seq[String] = Seq("pg_toast", "pg_catalog", "information_schema")
   val DO_NOT_CHOWN: Seq[String] = Seq("public")
-  
+
   def parseTxtFileContainingSchemaOwner(fileUri: URI): UserName = {
     val path = Paths.get(fileUri)
     val lines = Files.lines(path)
