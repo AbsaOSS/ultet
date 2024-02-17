@@ -14,15 +14,11 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.model.table.alterations
+package za.co.absa.ultet.util
 
-import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableIdentifier}
+object SourceFileType extends Enumeration {
 
-case class TableColumnCommentDrop(tableIdentifier: TableIdentifier, columnName: ColumnName) extends TableAlteration {
-  override def sqlExpression: String = {
-    s"""COMMENT ON COLUMN ${tableIdentifier.fullName}.${columnName.normalized}
-       |IS NULL;""".stripMargin
-  }
+  final type SourceFileType = Value
 
-  override def orderInTransaction: Int = 250
+  final val FunctionSrc, TableSrc, SchemaOwner, Unknown = Value
 }

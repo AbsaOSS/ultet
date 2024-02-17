@@ -20,9 +20,8 @@ import za.co.absa.ultet.dbitems.table.DBTableColumn
 import za.co.absa.ultet.model.SchemaName
 
 case class TableCreation(
-  schemaName: SchemaName,
-  tableName: TableName,
-  columns: Seq[DBTableColumn],
+                          tableIdentifier: TableIdentifier,
+                          columns: Seq[DBTableColumn],
 ) extends TableEntry {
 
   override def sqlExpression: String = {
@@ -32,7 +31,7 @@ case class TableCreation(
       s"${col.columnName.value} ${col.dataType}$notNull$default"
     }
 
-    s"""CREATE TABLE ${schemaName.value}.${tableName.value}(
+    s"""CREATE TABLE ${tableIdentifier.fullName}(
        |${columnLines.mkString(",\n")}
        |);""".stripMargin
   }

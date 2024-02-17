@@ -17,11 +17,11 @@
 package za.co.absa.ultet.model.table.alterations
 
 import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableName}
+import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableIdentifier, TableName}
 
-case class TableColumnCommentSet(schemaName: SchemaName, tableName: TableName, columnName: ColumnName, comment: String) extends TableAlteration {
+case class TableColumnCommentSet(tableIdentifier: TableIdentifier, columnName: ColumnName, comment: String) extends TableAlteration {
   override def sqlExpression: String = {
-    s"""COMMENT ON COLUMN ${schemaName.value}.${tableName.value}.${columnName.value}
+    s"""COMMENT ON COLUMN ${tableIdentifier.fullName}.${columnName.normalized}
        |IS '$comment';""".stripMargin
 
   }

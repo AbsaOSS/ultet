@@ -21,8 +21,8 @@ import za.co.absa.ultet.model.TransactionGroup
 import za.co.absa.ultet.model.SchemaName
 
 trait TableEntry extends SQLEntry {
-  def schemaName: SchemaName
-  def tableName: TableName
+
+  def tableIdentifier: TableIdentifier
 
   def transactionGroup: TransactionGroup.TransactionGroup = TransactionGroup.Objects
 }

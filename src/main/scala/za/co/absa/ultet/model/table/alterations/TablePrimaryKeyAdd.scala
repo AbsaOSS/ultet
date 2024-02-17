@@ -17,14 +17,13 @@
 package za.co.absa.ultet.model.table.alterations
 
 import za.co.absa.ultet.dbitems.table.DBTableIndex.DBPrimaryKey
-import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.model.table.{TableAlteration, TableName}
+import za.co.absa.ultet.model.table.{TableAlteration, TableIdentifier}
 
-case class TablePrimaryKeyAdd(schemaName: SchemaName, tableName: TableName, primaryKey: DBPrimaryKey) extends TableAlteration {
+case class TablePrimaryKeyAdd(tableIdentifier: TableIdentifier, primaryKey: DBPrimaryKey) extends TableAlteration {
   override def sqlExpression: String = {
     val commandColumnNames = primaryKey.columns.map(_.expression).mkString(", ")
 
-    s"""ALTER TABLE ${schemaName.value}.${tableName.value}
+    s"""ALTER TABLE ${tableIdentifier.fullName}
        |ADD CONSTRAINT ${primaryKey.indexName}
        |PRIMARY KEY ($commandColumnNames);""".stripMargin
   }

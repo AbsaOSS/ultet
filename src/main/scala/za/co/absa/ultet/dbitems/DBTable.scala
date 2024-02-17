@@ -16,32 +16,33 @@
 
 package za.co.absa.ultet.dbitems
 
-import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableCreation, TableEntry, TableIdentifier, TableName}
+import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableIdentifier, TableName}
 import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
-import za.co.absa.ultet.model.table.index.{TableIndexCreate, TableIndexDrop}
-import za.co.absa.ultet.model.table.alterations.{TableColumnCommentDrop, TableColumnCommentSet, TableColumnDefaultDrop, TableColumnDefaultSet, TableColumnNotNullDrop, TablePrimaryKeyAdd, TablePrimaryKeyDrop}
-import DBTable.ColumnsDifferenceResolver
+import za.co.absa.ultet.model.table.alterations.{TableColumnCommentDrop, TableColumnCommentSet, TableColumnDefaultDrop, TableColumnDefaultSet, TableColumnNotNullDrop}
 import za.co.absa.balta.classes.DBConnection
 import za.co.absa.ultet.dbitems.extractors.DBTableFromPG
 import za.co.absa.ultet.dbitems.table.DBTableIndex.{DBPrimaryKey, DBSecondaryIndex}
 import za.co.absa.ultet.dbitems.table.DBTableColumn
+import za.co.absa.ultet.implicits.OptionImplicits.OptionEnhancements
 import za.co.absa.ultet.model.table.column.{TableColumnAdd, TableColumnDrop}
 
 import java.sql.Connection
 
-//TODO checks on validity of entries
+//TODO  #31 Add warnings to the system, checks on validity of entries
 case class DBTable(
-                   tableName: TableName,
-                   schemaName: SchemaName,
+                   tableIdentifier: TableIdentifier,
                    primaryDBName: DatabaseName,
                    owner: UserName,
-                   description: Option[String] = None,
-                   columns: Seq[DBTableColumn] = Seq.empty,
-                   primaryKey: Option[DBPrimaryKey] = None,
-                   indexes: Set[DBSecondaryIndex] = Set.empty
+                   description: Option[String],
+                   columns: Seq[DBTableColumn],
+                   primaryKey: Option[DBPrimaryKey],
+                   indexes: Set[DBSecondaryIndex]
                    ) {
 
-  val tableIdentifier: TableIdentifier = TableIdentifier(tableName, Some(schemaName))
+  def schemaName: SchemaName = tableIdentifier.schemaName
+
+  def tableName: TableName = tableIdentifier.tableName
+
 
   def addColumn(column: DBTableColumn): DBTable = {
     this.copy(columns = columns ++ Seq(column))
@@ -55,57 +56,30 @@ case class DBTable(
     this.copy(primaryKey = Some(pk))
   }
 
-  def -(other: Option[DBTable]): Seq[TableEntry] = {
-    other match {
-      case None => {
-        val pkCreateAlteration: Option[TableAlteration] = primaryKey.map(definedPk => TablePrimaryKeyAdd(schemaName, tableName, definedPk))
-        val indicesCreateAlterations = indexes.map(idx => TableIndexCreate(schemaName, idx))
-
-        Seq(TableCreation(schemaName, tableName, columns)) ++
-          pkCreateAlteration.toSeq ++
-          indicesCreateAlterations
-      }
-
-      case Some(definedOther) => this - definedOther
-    }
+  def -(other: Option[DBTable]): DBItem = {
+    other.map(this - _).getOrElse(DBTableInsert(this))
   }
 
-  def -(other: DBTable): Seq[TableEntry] = {
-    assert(schemaName == other.schemaName, s"Schema names must match to diff tables, but $schemaName != ${other.schemaName}")
-    assert(tableName == other.tableName, s"Table names must match to diff tables, but $tableName != ${other.tableName}")
-
-    val removeIndices = this.indexes.diff(other.indexes)
-    val alterationsToRemoveIndices = removeIndices.map(idx => TableIndexDrop(schemaName, tableName, idx.tableName.normalized))
-
-    val addIndices = other.indexes.diff(this.indexes)
-    val alterationsToAddIndices = addIndices.map(idx => TableIndexCreate(schemaName, idx))
-
-    val pkEntries: Seq[TableAlteration] = (this.primaryKey, other.primaryKey) match {
-      case (x, y) if x == y => Seq.empty
-      case (Some(existingPk), Some(newPk)) => Seq(
-        TablePrimaryKeyDrop(schemaName, tableName, existingPk),
-        TablePrimaryKeyAdd(schemaName, tableName, newPk)
-      )
-      case (None, Some(newPk)) => Seq(TablePrimaryKeyAdd(schemaName, tableName, newPk))
-      case (Some(existingPk), None) => Seq(TablePrimaryKeyDrop(schemaName, tableName, existingPk))
-    }
-
-    // todo alter description?
-
-    val diffResolver = ColumnsDifferenceResolver(schemaName, tableName)(columns, other.columns)
-
-    diffResolver.alterationsForColumnAdditions ++
-    diffResolver.alterationsForCommonColumns ++
-      alterationsToRemoveIndices ++
-      diffResolver.alterationsForColumnRemovals
-    // pkEntries ++ todo #94
-    // alterationsToAddIndices ++ todo #94
-
+  def -(other: DBTable): DBItem = {
+    DBTableAlter(this, other)
   }
 }
 
 object DBTable {
-  case class ColumnsDifferenceResolver(schemaName: SchemaName, tableName: TableName)(thisColumns: Seq[DBTableColumn], otherColumns: Seq[DBTableColumn]) {
+
+  def apply(schemaName: SchemaName,
+            tableName: TableName,
+            primaryDBName: DatabaseName,
+            owner: UserName,
+            description: Option[String] = None,
+            columns: Seq[DBTableColumn] = Seq.empty,
+            primaryKey: Option[DBPrimaryKey] = None,
+            indexes: Set[DBSecondaryIndex] = Set.empty
+           ): DBTable = {
+    new DBTable(TableIdentifier(schemaName, tableName), primaryDBName, owner, description, columns, primaryKey, indexes)
+  }
+
+  case class ColumnsDifferenceResolver(tableIdentifier: TableIdentifier)(thisColumns: Seq[DBTableColumn], otherColumns: Seq[DBTableColumn]) {
     private[dbitems] val thisColumnNames = thisColumns.map(_.columnName)
     private[dbitems] val otherColumnNames = otherColumns.map(_.columnName)
 
@@ -122,19 +96,23 @@ object DBTable {
 
     private[dbitems] def commonColumns: Set[(DBTableColumn, DBTableColumn)] = {
       commonColumnNames.map { commonName =>
-        val tCol = thisColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${schemaName.value}.${tableName.value}"))
-        val oCol = otherColumns.find(_.columnName == commonName).getOrElse(throw new IllegalStateException(s"could not find column $commonName in table ${schemaName.value}.${tableName.value}"))
+        val tCol = thisColumns
+          .find(_.columnName == commonName)
+          .getOrThrow(new IllegalStateException(s"could not find column $commonName in table ${tableIdentifier.fullName}"))
+        val oCol = otherColumns
+          .find(_.columnName == commonName)
+          .getOrThrow(new IllegalStateException(s"could not find column $commonName in table ${tableIdentifier.fullName}"))
 
         (tCol, oCol)
       }
     }
 
     def alterationsForColumnAdditions: Seq[TableAlteration] = {
-      columnsToAdd.map(col => TableColumnAdd(schemaName, tableName, col))
+      columnsToAdd.map(col => TableColumnAdd(tableIdentifier, col))
     }
 
     def alterationsForColumnRemovals: Seq[TableAlteration] = {
-      columnsToRemove.map(col => TableColumnDrop(schemaName, tableName, col.columnName)).toSeq
+      columnsToRemove.map(col => TableColumnDrop(tableIdentifier, col.columnName)).toSeq
     }
 
     def alterationsForCommonColumns: Seq[TableAlteration] = {
@@ -147,31 +125,31 @@ object DBTable {
     }
 
     private def generateAlterForDataTypeChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
-      // todo for very specific datatype changes only? from/to String, numerics?
+      // TODO #37 Allow certain data type changes
       throw new IllegalStateException(s"Cannot change datatype of ${thisCol.columnName.value} from ${thisCol.dataType} to ${otherCol.dataType} ")
     }
 
     private def generateAlterForNotNullChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
       (thisCol.notNull, otherCol.notNull) match {
         case (t, o) if t == o => Seq.empty // no change
-        case (true, false) => Seq(TableColumnNotNullDrop(schemaName, tableName, otherCol.columnName))
-        case (false, true) => throw new IllegalStateException(s"Cannot change [null] to [not null] for ${thisCol.columnName.value} for table ${schemaName.value}.${tableName.value} ")
+        case (true, false) => Seq(TableColumnNotNullDrop(tableIdentifier, otherCol.columnName))
+        case (false, true) => throw new IllegalStateException(s"Cannot change [null] to [not null] for ${thisCol.columnName.value} for table ${tableIdentifier.fullName} ")
       }
     }
 
     private def generateAlterForDescriptionChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
       (thisCol.description, otherCol.description) match {
         case (t, o) if t == o => Seq.empty // no change
-        case (Some(t), None) => Seq(TableColumnCommentDrop(schemaName, tableName, thisCol.columnName))
-        case (_, Some(o)) => Seq(TableColumnCommentSet(schemaName, tableName, otherCol.columnName, o)) // both add/set
+        case (Some(_), None) => Seq(TableColumnCommentDrop(tableIdentifier, thisCol.columnName))
+        case (_, Some(o)) => Seq(TableColumnCommentSet(tableIdentifier, otherCol.columnName, o)) // both add/set
       }
     }
 
     private def generateAlterForDefaultChange(thisCol: DBTableColumn, otherCol: DBTableColumn): Seq[TableAlteration] = {
       (thisCol.default, otherCol.default) match {
         case (t, o) if t == o => Seq.empty // no change
-        case (Some(t), None) => Seq(TableColumnDefaultDrop(schemaName, tableName, thisCol.columnName))
-        case (_, Some(o)) => Seq(TableColumnDefaultSet(schemaName, tableName, otherCol.columnName, o)) // both add/set
+        case (Some(t), None) => Seq(TableColumnDefaultDrop(tableIdentifier, thisCol.columnName))
+        case (_, Some(o)) => Seq(TableColumnDefaultSet(tableIdentifier, otherCol.columnName, o)) // both add/set
       }
     }
 
@@ -179,7 +157,7 @@ object DBTable {
   def createFromPG(schemaName: SchemaName, tableName: TableName, databaseName: DatabaseName)
                   (implicit jdbcConnection: Option[Connection]): Option[DBTable] = {
     jdbcConnection.flatMap { dbConnection =>
-      val extractor = new DBTableFromPG(databaseName)(new DBConnection(dbConnection))
+      val extractor = DBTableFromPG(databaseName)(new DBConnection(dbConnection))
       extractor.extract(schemaName, tableName)
     }
   }

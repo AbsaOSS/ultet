@@ -14,15 +14,22 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.model.table.alterations
+package za.co.absa.ultet
 
-import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableIdentifier}
+import za.co.absa.ultet.dbitems.DBTable
+import za.co.absa.ultet.model.table.TableName
+import za.co.absa.ultet.model.{DatabaseDef, DatabaseName, SQLEntry, SchemaDef, SchemaName, TransactionGroup}
 
-case class TableColumnCommentDrop(tableIdentifier: TableIdentifier, columnName: ColumnName) extends TableAlteration {
-  override def sqlExpression: String = {
-    s"""COMMENT ON COLUMN ${tableIdentifier.fullName}.${columnName.normalized}
-       |IS NULL;""".stripMargin
-  }
+package object util {
 
-  override def orderInTransaction: Int = 250
+  type DatabaseDefs = Map[DatabaseName, DatabaseDef]
+
+  type SchemaDefs = Map[SchemaName, SchemaDef]
+
+  type SqlEntriesPerTransaction = Map[TransactionGroup.Value, Seq[SQLEntry]]
+
+  type SqlsPerTransaction = Map[TransactionGroup.Value, Seq[String]]
+
+  type Tables = Map[TableName, DBTable]
+
 }

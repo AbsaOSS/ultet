@@ -23,7 +23,7 @@ case class DBFunctionFromSource(
                                  fnName: FunctionName,
                                  paramTypes: Seq[FunctionArgumentType],
                                  owner: UserName,
-                                 users: Seq[UserName],
+                                 users: Set[UserName],
                                  schema: SchemaName,
                                  database: DatabaseName,
                                  sqlBody: String

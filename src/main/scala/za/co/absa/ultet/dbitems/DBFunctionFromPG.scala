@@ -18,21 +18,22 @@ package za.co.absa.ultet.dbitems
 
 
 import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionDrop, FunctionName}
-import za.co.absa.ultet.model.{SQLEntry, SchemaName}
+import za.co.absa.ultet.model.{DatabaseName, SQLEntry, SchemaName}
 
 import java.sql.Connection
 
 case class DBFunctionFromPG(
                              schema: SchemaName,
                              fnName: FunctionName,
-                             paramTypes: Seq[FunctionArgumentType]
+                             paramTypes: Seq[FunctionArgumentType],
+                             database: DatabaseName //TODO: Implement this
                            ) extends DBFunction {
   override def sqlEntries: Seq[SQLEntry] = Seq(FunctionDrop(schema, fnName, paramTypes))
 }
 
 object DBFunctionFromPG {
 
-  def fetchAllOfSchema(schemaName: SchemaName)
+  def fetchAllOfSchema(databaseName: DatabaseName, schemaName: SchemaName)
                       (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
     val query =
       s"""
@@ -47,10 +48,10 @@ object DBFunctionFromPG {
          |  p.prokind = 'f';
          |""".stripMargin
 
-    fetchAllOfSchemaWithQuery(schemaName, query)
+    fetchAllOfSchemaWithQuery(databaseName, schemaName, query)
   }
 
-  def fetchAllOverloads(schemaName: SchemaName, functionName: FunctionName)
+  def fetchAllOverloads(databaseName: DatabaseName, schemaName: SchemaName, functionName: FunctionName)
                        (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
     val query =
       s"""
@@ -66,10 +67,10 @@ object DBFunctionFromPG {
          |  p.prokind = 'f';
          |""".stripMargin
 
-    fetchAllOfSchemaWithQuery(schemaName, query)
+    fetchAllOfSchemaWithQuery(databaseName, schemaName, query)
   }
 
-  private def fetchAllOfSchemaWithQuery(schemaName: SchemaName, query: String)
+  private def fetchAllOfSchemaWithQuery(databaseName: DatabaseName, schemaName: SchemaName, query: String)
                                        (implicit jdbcConnection: Connection): Seq[DBFunctionFromPG] = {
     val preparedStatement = jdbcConnection.prepareStatement(query)
     val result = preparedStatement.executeQuery()
@@ -89,7 +90,8 @@ object DBFunctionFromPG {
       val dbFunctionFromPG = DBFunctionFromPG(
         schemaName,
         FunctionName(fnName),
-        argumentTypes
+        argumentTypes,
+        databaseName
       )
       seqBuilder += dbFunctionFromPG
     }

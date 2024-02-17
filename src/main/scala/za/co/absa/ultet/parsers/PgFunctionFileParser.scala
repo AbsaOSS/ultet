@@ -19,21 +19,23 @@ package za.co.absa.ultet.parsers
 import za.co.absa.ultet.dbitems.DBFunctionFromSource
 import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionName}
 import za.co.absa.ultet.model.{DatabaseName, SchemaName, UserName}
-import za.co.absa.ultet.parsers.PgFunctionFileParser._
 
-import java.net.URI
-import java.nio.file.{Files, Paths}
-import java.util.stream.Collectors
+object PgFunctionFileParser extends GenericFileParser[DBFunctionFromSource] {
 
-case class PgFunctionFileParser() {
+  override def parseSource(source: String): Set[DBFunctionFromSource] = {
+    val owner = parseOwnerFromSql(source)
+    val (databaseName, users) = parseDatabaseNameAndUsersFromSql(source)
+    val (schemaName, fnName, inParamTypes) = parseSchemaNameFnNameAndInParamTypesFromSql(source)
 
-  def parseFile(fileUri: URI): DBFunctionFromSource = {
-    val path = Paths.get(fileUri)
-
-    val lines = Files.lines(path)
-    val content = lines.collect(Collectors.joining("\n"))
-
-    parseString(content)
+    Set(DBFunctionFromSource(
+      FunctionName(fnName),
+      inParamTypes.map(FunctionArgumentType),
+      UserName(owner),
+      users.map(UserName).toSet,
+      SchemaName(schemaName),
+      DatabaseName(databaseName),
+      source
+    ))
   }
 
   private def parseOwnerFromSql(sqlStr: String): String = {
@@ -84,29 +86,11 @@ case class PgFunctionFileParser() {
     }
   }
 
-  def parseString(str: String): DBFunctionFromSource = {
-    val owner = parseOwnerFromSql(str)
-    val (databaseName, users) = parseDatabaseNameAndUsersFromSql(str)
-    val (schemaName, fnName, inParamTypes) = parseSchemaNameFnNameAndInParamTypesFromSql(str)
-
-    DBFunctionFromSource(
-      FunctionName(fnName),
-      inParamTypes.map(FunctionArgumentType),
-      UserName(owner),
-      users.map(UserName),
-      SchemaName(schemaName),
-      DatabaseName(databaseName),
-      str
-    )
-  }
-}
-
-object PgFunctionFileParser {
-  val ownerRx = """--\s*owner:\s*(\w+)\s*""".r
+  private val ownerRx = """--\s*owner:\s*(\w+)\s*""".r
   //                              1--1
   // 1 - capturing group for owner
 
-  val dbUsersRx = """--\s*database:\s*(\w+)\s*\(\s*((?:\w+)\s*(?:,\s*\w+\s*)*\s*)?\)""".r // need to ,-break and trim the users
+  private val dbUsersRx = """--\s*database:\s*(\w+)\s*\(\s*((?:\w+)\s*(?:,\s*\w+\s*)*\s*)?\)""".r // need to ,-break and trim the users
   //                                  1---1   2    34-----4   5------------5    6 7
   // 1 - capturing group #1 for db-name
   // 2,7 verbatim "()" in which users are written
@@ -115,7 +99,7 @@ object PgFunctionFileParser {
   // 5 - other users - comma separated from the first user
 
 
-  val schemaFnParamsRx = """(?i)CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(\w+)\.(\w+)\s*\(([,\s\w]+)\)""".r // need to break params
+  private val schemaFnParamsRx = """(?i)CREATE(?:\s+OR\s+REPLACE)?\s+FUNCTION\s+(\w+)\.(\w+)\s*\(([,\s\w]+)\)""".r // need to break params
   //                        1--1       2-----------------2              3---3 45---5    6 7-------7 8
   // 1 - case insensitive matching
   // 2 - non-capturing group of optionally present " OR REPLACE"
@@ -126,7 +110,7 @@ object PgFunctionFileParser {
   // 7 - capturing-group #3 - parameters are matched there as a block - \s also covers line-breaks => parsed further later
 
 
-  val singleParamCapturingRx = """(?i)\s*(IN|OUT)\s+(\w+)\s+(\w+)\s*""".r // used to break up params from ^^
+  private val singleParamCapturingRx = """(?i)\s*(IN|OUT)\s+(\w+)\s+(\w+)\s*""".r // used to break up params from ^^
   //                              1--1   2------2   3---3   4---4
   // 1 - case insensitive matching
   // 2 - capturing-group #1 IN/OUT param

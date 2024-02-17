@@ -25,4 +25,6 @@ trait DBFunction extends DBItem {
   def paramTypes: Seq[FunctionArgumentType]
   def schema: SchemaName
 
+  def database: DatabaseName
+
 }

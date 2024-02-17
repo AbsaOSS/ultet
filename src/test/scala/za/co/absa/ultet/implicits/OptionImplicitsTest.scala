@@ -14,15 +14,20 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.model.table.alterations
+package za.co.absa.ultet.implicits
 
-import za.co.absa.ultet.model.table.{ColumnName, TableAlteration, TableIdentifier}
+import org.scalatest.funsuite.{AnyFunSuite, AnyFunSuiteLike}
+import za.co.absa.ultet.implicits.OptionImplicits.OptionEnhancements
 
-case class TableColumnCommentDrop(tableIdentifier: TableIdentifier, columnName: ColumnName) extends TableAlteration {
-  override def sqlExpression: String = {
-    s"""COMMENT ON COLUMN ${tableIdentifier.fullName}.${columnName.normalized}
-       |IS NULL;""".stripMargin
+class OptionImplicitsTest extends AnyFunSuiteLike {
+  test("getOrThrow returns the value if it is defined") {
+    val opt = Some(true)
+    assert(opt.getOrThrow(new Exception("Foo")))
   }
 
-  override def orderInTransaction: Int = 250
+  test("getOrThrow throws an exception if the value is not defined") {
+    val opt = None
+    assertThrows[Exception](opt.getOrThrow(new Exception("Foo")))
+  }
+
 }
