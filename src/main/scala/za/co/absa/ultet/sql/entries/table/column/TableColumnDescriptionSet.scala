@@ -18,11 +18,16 @@ package za.co.absa.ultet.sql.entries.table.column
 
 import za.co.absa.ultet.sql.entries.table.TableAlteration
 import za.co.absa.ultet.types.table.{ColumnName, TableIdentifier}
+import za.co.absa.ultet.util.CommentComposer
 
-case class TableColumnCommentDrop(tableIdentifier: TableIdentifier, columnName: ColumnName) extends TableAlteration {
+case class TableColumnDescriptionSet(tableIdentifier: TableIdentifier, columnName: ColumnName, description: Option[String])
+  extends TableAlteration
+  with CommentComposer {
+
   override def sqlExpression: String = {
+    val comment = composeCommentEntry(description)
     s"""COMMENT ON COLUMN ${tableIdentifier.fullName}.${columnName.normalized}
-       |IS NULL;""".stripMargin
+       |IS $comment;""".stripMargin
   }
 
   override def orderInTransaction: Int = 250

@@ -19,15 +19,17 @@ package za.co.absa.ultet.model.table
 import za.co.absa.ultet.model.DBItem
 import za.co.absa.ultet.sql.entries.SQLEntry
 import za.co.absa.ultet.sql.entries.table.index.{TableIndexCreation, TablePrimaryKeyAdd}
-import za.co.absa.ultet.sql.entries.table.{TableAlteration, TableCreation}
+import za.co.absa.ultet.sql.entries.table.{TableAlteration, TableCreation, TableDescriptionSet}
 
 case class TableInsert(table: TableDef) extends DBItem {
   override def sqlEntries: Seq[SQLEntry] = {
     val pkCreateAlteration: Option[TableAlteration] = table.primaryKey.map(definedPk => TablePrimaryKeyAdd(table.tableIdentifier, definedPk))
     val indicesCreateAlterations = table.indexes.map(idx => TableIndexCreation(table.tableIdentifier, idx))
+    val tableDescription =  table.description.map(d =>TableDescriptionSet(table.tableIdentifier, Some(d)))
 
-    Seq(TableCreation(table.tableIdentifier, table.columns)) ++
-      pkCreateAlteration.toSeq ++
+      Seq(TableCreation(table.tableIdentifier, table.columns)) ++
+      tableDescription ++
+      pkCreateAlteration ++
       indicesCreateAlterations
   }
 }

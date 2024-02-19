@@ -22,7 +22,7 @@ import za.co.absa.ultet.model.table.column.TableColumn
 import za.co.absa.ultet.model.table.index.TableIndex.{PrimaryKey, SecondaryIndex}
 import za.co.absa.ultet.model.DBItem
 import za.co.absa.ultet.sql.entries.table.TableAlteration
-import za.co.absa.ultet.sql.entries.table.column.{TableColumnAdd, TableColumnCommentDrop, TableColumnCommentSet, TableColumnDefaultDrop, TableColumnDefaultSet, TableColumnDrop, TableColumnNotNullDrop}
+import za.co.absa.ultet.sql.entries.table.column.{TableColumnAdd, TableColumnDescriptionSet, TableColumnDefaultDrop, TableColumnDefaultSet, TableColumnDrop, TableColumnNotNullDrop}
 import za.co.absa.ultet.types.DatabaseName
 import za.co.absa.ultet.types.schema.SchemaName
 import za.co.absa.ultet.types.table.{ColumnName, TableIdentifier, TableName}
@@ -141,10 +141,10 @@ object TableDef {
     }
 
     private def generateAlterForDescriptionChange(thisCol: TableColumn, otherCol: TableColumn): Seq[TableAlteration] = {
-      (thisCol.description, otherCol.description) match {
-        case (t, o) if t == o => Seq.empty // no change
-        case (Some(_), None) => Seq(TableColumnCommentDrop(tableIdentifier, thisCol.columnName))
-        case (_, Some(o)) => Seq(TableColumnCommentSet(tableIdentifier, otherCol.columnName, o)) // both add/set
+      if (thisCol.description != otherCol.description) {
+        Seq(TableColumnDescriptionSet(tableIdentifier, otherCol.columnName, otherCol.description)) // add/un-/set
+      } else {
+        Seq.empty // no change
       }
     }
 

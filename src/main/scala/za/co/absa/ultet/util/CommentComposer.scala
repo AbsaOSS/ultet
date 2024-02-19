@@ -14,17 +14,14 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.sql.entries.table.column
+package za.co.absa.ultet.util
 
-import za.co.absa.ultet.sql.entries.table.TableAlteration
-import za.co.absa.ultet.types.table.{ColumnName, TableIdentifier}
-
-case class TableColumnCommentSet(tableIdentifier: TableIdentifier, columnName: ColumnName, comment: String) extends TableAlteration {
-  override def sqlExpression: String = {
-    s"""COMMENT ON COLUMN ${tableIdentifier.fullName}.${columnName.normalized}
-       |IS '$comment';""".stripMargin
-
+trait CommentComposer {
+  protected def composeCommentEntry(commentBasis: Option[String]): String = {
+    commentBasis.fold("NULL") { s =>
+      val quotesHandled = s.replaceAll("'", "''")
+      s"'$quotesHandled'"
+    }
   }
 
-  override def orderInTransaction: Int = 250
 }
