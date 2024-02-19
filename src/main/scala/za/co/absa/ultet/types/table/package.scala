@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.implicits
+package za.co.absa.ultet.types
 
-import za.co.absa.ultet.model.DBItem
-import za.co.absa.ultet.types.complex.SqlEntriesPerTransaction
+import za.co.absa.ultet.types.schema.SchemaName
 
-object SetImplicits {
+package object table {
 
-  implicit class DBItemSetEnhancement(val dbItems: Set[DBItem]) extends AnyVal {
-    def toSortedGroupedSqlEntries: SqlEntriesPerTransaction = {
-      val sqlEntries = dbItems.toSeq.flatMap(_.sqlEntries)
-      sqlEntries
-        .groupBy(_.transactionGroup)
-        .mapValues(_.sortBy(_.orderInTransaction))
-    }  }
+  case class TableName(value: String) extends DBObjectName(value)
 
+  case class ColumnName(value: String) extends DBObjectName(value)
+
+  case class IndexName(value: String) extends DBObjectName(value)
+
+  case class TableIdentifier(schemaName: SchemaName, tableName: TableName) {
+    def fullName: String = s"${schemaName.normalized}.${tableName.normalized}"
+  }
 }

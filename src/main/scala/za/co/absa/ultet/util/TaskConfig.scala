@@ -16,7 +16,7 @@
 
 package za.co.absa.ultet.util
 
-import za.co.absa.ultet.model.DatabaseName
+import za.co.absa.ultet.types.DatabaseName
 
 case class TaskConfig(
                         defaultDatabase: DatabaseName,

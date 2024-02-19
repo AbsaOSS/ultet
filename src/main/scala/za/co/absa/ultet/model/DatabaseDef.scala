@@ -16,8 +16,8 @@
 
 package za.co.absa.ultet.model
 
-import za.co.absa.ultet.dbitems.DBItem
-import za.co.absa.ultet.util.SchemaDefs
+import za.co.absa.ultet.types.DatabaseName
+import za.co.absa.ultet.types.complex.SchemaDefs
 
 case class DatabaseDef(
                         databaseName: DatabaseName,

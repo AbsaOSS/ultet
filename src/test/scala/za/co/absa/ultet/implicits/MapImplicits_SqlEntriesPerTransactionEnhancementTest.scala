@@ -16,11 +16,15 @@
 
 package za.co.absa.ultet.implicits
 
-import org.scalatest.funsuite.{AnyFunSuite, AnyFunSuiteLike}
-import za.co.absa.ultet.util.SqlEntriesPerTransaction
+import org.scalatest.funsuite.AnyFunSuiteLike
 import za.co.absa.ultet.implicits.MapImplicits.SqlEntriesPerTransactionEnhancement
-import za.co.absa.ultet.model.function.{FunctionArgumentType, FunctionDrop, FunctionName}
-import za.co.absa.ultet.model.{SchemaName, TransactionGroup, UserEntry, UserName}
+import za.co.absa.ultet.sql.TransactionGroup
+import za.co.absa.ultet.sql.entries.function.FunctionDrop
+import za.co.absa.ultet.sql.entries.user
+import za.co.absa.ultet.types.complex.SqlEntriesPerTransaction
+import za.co.absa.ultet.types.function.{FunctionArgumentType, FunctionName}
+import za.co.absa.ultet.types.schema.SchemaName
+import za.co.absa.ultet.types.user.UserName
 
 class MapImplicits_SqlEntriesPerTransactionEnhancementTest extends AnyFunSuiteLike {
   test("toSql without any entries") {
@@ -33,7 +37,7 @@ class MapImplicits_SqlEntriesPerTransactionEnhancementTest extends AnyFunSuiteLi
 
     val transaction1 = TransactionGroup.Roles
     val transaction2 = TransactionGroup.Objects
-    val entry1 = UserEntry(UserName("user1"))
+    val entry1 = user.UserCreation(UserName("user1"))
     val entry2 = FunctionDrop(SchemaName("foo"), FunctionName("fmc1"), Seq.empty)
     val entry3 = FunctionDrop(SchemaName("bar"), FunctionName("fnc2"), Seq(FunctionArgumentType("TEXT")))
     val input: SqlEntriesPerTransaction = Map(

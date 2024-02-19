@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.implicits
+package za.co.absa.ultet.util.parsers
 
-import za.co.absa.ultet.model.DBItem
-import za.co.absa.ultet.types.complex.SqlEntriesPerTransaction
+import za.co.absa.ultet.util.FileReader
 
-object SetImplicits {
+import java.net.URI
 
-  implicit class DBItemSetEnhancement(val dbItems: Set[DBItem]) extends AnyVal {
-    def toSortedGroupedSqlEntries: SqlEntriesPerTransaction = {
-      val sqlEntries = dbItems.toSeq.flatMap(_.sqlEntries)
-      sqlEntries
-        .groupBy(_.transactionGroup)
-        .mapValues(_.sortBy(_.orderInTransaction))
-    }  }
+trait GenericFileParser[T] {
+  def parseFile(fileUri: URI): Set[T] = {
+    parseSource(FileReader.readFileAsString(fileUri))
+  }
 
+  def parseSource(lines: Seq[String]): Set[T] = {
+    parseSource(lines.mkString("\n"))
+  }
+
+  def parseSource(source: String): Set[T]
 }
