@@ -16,8 +16,8 @@
 
 package za.co.absa.ultet.util
 
-import za.co.absa.ultet.model.SchemaName
-import za.co.absa.ultet.util.SourceFileType.{FunctionSrc, SourceFileType}
+import za.co.absa.ultet.types.schema.SchemaName
+import za.co.absa.ultet.util.SourceFileType.SourceFileType
 
 import java.net.URI
 import java.nio.file._

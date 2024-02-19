@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.implicits
+package za.co.absa.ultet.sql.entries.schema
 
-import za.co.absa.ultet.model.DBItem
-import za.co.absa.ultet.types.complex.SqlEntriesPerTransaction
+import za.co.absa.ultet.sql.TransactionGroup
+import za.co.absa.ultet.sql.TransactionGroup.TransactionGroup
+import za.co.absa.ultet.sql.entries.SQLEntry
+import za.co.absa.ultet.types.schema.SchemaName
+import za.co.absa.ultet.types.user.UserName
 
-object SetImplicits {
+case class SchemaOwnership(name: SchemaName, owner: UserName) extends SQLEntry {
+  override def sqlExpression: String = s"ALTER SCHEMA ${name.normalized} OWNER TO ${owner.normalized};"
 
-  implicit class DBItemSetEnhancement(val dbItems: Set[DBItem]) extends AnyVal {
-    def toSortedGroupedSqlEntries: SqlEntriesPerTransaction = {
-      val sqlEntries = dbItems.toSeq.flatMap(_.sqlEntries)
-      sqlEntries
-        .groupBy(_.transactionGroup)
-        .mapValues(_.sortBy(_.orderInTransaction))
-    }  }
+  override def transactionGroup: TransactionGroup = TransactionGroup.Objects
 
+  override def orderInTransaction: Int = 60
 }
+

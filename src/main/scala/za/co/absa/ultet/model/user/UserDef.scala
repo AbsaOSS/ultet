@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.implicits
+package za.co.absa.ultet.model.user
 
 import za.co.absa.ultet.model.DBItem
-import za.co.absa.ultet.types.complex.SqlEntriesPerTransaction
+import za.co.absa.ultet.sql.entries.user.UserCreation
+import za.co.absa.ultet.sql.entries.SQLEntry
+import za.co.absa.ultet.types.user.UserName
 
-object SetImplicits {
+case class UserDef(name: UserName) extends DBItem {
 
-  implicit class DBItemSetEnhancement(val dbItems: Set[DBItem]) extends AnyVal {
-    def toSortedGroupedSqlEntries: SqlEntriesPerTransaction = {
-      val sqlEntries = dbItems.toSeq.flatMap(_.sqlEntries)
-      sqlEntries
-        .groupBy(_.transactionGroup)
-        .mapValues(_.sortBy(_.orderInTransaction))
-    }  }
-
+  override def sqlEntries: Seq[SQLEntry] = {
+    Seq(UserCreation(name))
+  }
 }

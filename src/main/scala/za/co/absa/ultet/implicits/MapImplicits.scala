@@ -16,8 +16,7 @@
 
 package za.co.absa.ultet.implicits
 
-import za.co.absa.ultet.model.TransactionGroup
-import za.co.absa.ultet.util.{SqlEntriesPerTransaction, SqlsPerTransaction}
+import za.co.absa.ultet.types.complex.{SqlEntriesPerTransaction, SqlsPerTransaction}
 
 object MapImplicits {
   implicit class SqlEntriesPerTransactionEnhancement(val entries: SqlEntriesPerTransaction) extends AnyVal {

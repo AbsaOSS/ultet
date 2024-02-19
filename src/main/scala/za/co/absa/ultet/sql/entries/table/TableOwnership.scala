@@ -14,19 +14,19 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.implicits
+package za.co.absa.ultet.sql.entries.table
 
-import za.co.absa.ultet.model.DBItem
-import za.co.absa.ultet.types.complex.SqlEntriesPerTransaction
+import za.co.absa.ultet.types.table.TableIdentifier
+import za.co.absa.ultet.types.user.UserName
 
-object SetImplicits {
+case class TableOwnership(
+                           tableIdentifier: TableIdentifier,
+                           owner: UserName
+) extends TableAlteration {
 
-  implicit class DBItemSetEnhancement(val dbItems: Set[DBItem]) extends AnyVal {
-    def toSortedGroupedSqlEntries: SqlEntriesPerTransaction = {
-      val sqlEntries = dbItems.toSeq.flatMap(_.sqlEntries)
-      sqlEntries
-        .groupBy(_.transactionGroup)
-        .mapValues(_.sortBy(_.orderInTransaction))
-    }  }
+  override def sqlExpression: String = {
+    s"""ALTER TABLE ${tableIdentifier.fullName} OWNER TO ${owner.value};"""
+  }
 
+  override def orderInTransaction: Int = 201
 }

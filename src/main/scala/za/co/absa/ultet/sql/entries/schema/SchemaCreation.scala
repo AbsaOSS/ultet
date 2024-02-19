@@ -14,19 +14,17 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.implicits
+package za.co.absa.ultet.sql.entries.schema
 
-import za.co.absa.ultet.model.DBItem
-import za.co.absa.ultet.types.complex.SqlEntriesPerTransaction
+import za.co.absa.ultet.sql.TransactionGroup
+import za.co.absa.ultet.sql.TransactionGroup.TransactionGroup
+import za.co.absa.ultet.sql.entries.SQLEntry
+import za.co.absa.ultet.types.schema.SchemaName
 
-object SetImplicits {
+case class SchemaCreation(name: SchemaName) extends SQLEntry {
+  override def sqlExpression: String = s"CREATE SCHEMA IF NOT EXISTS ${name.normalized};"
 
-  implicit class DBItemSetEnhancement(val dbItems: Set[DBItem]) extends AnyVal {
-    def toSortedGroupedSqlEntries: SqlEntriesPerTransaction = {
-      val sqlEntries = dbItems.toSeq.flatMap(_.sqlEntries)
-      sqlEntries
-        .groupBy(_.transactionGroup)
-        .mapValues(_.sortBy(_.orderInTransaction))
-    }  }
+  override def transactionGroup: TransactionGroup = TransactionGroup.Objects
 
+  override def orderInTransaction: Int = 55
 }

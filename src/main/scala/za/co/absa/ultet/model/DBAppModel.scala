@@ -17,13 +17,18 @@
 package za.co.absa.ultet.model
 
 import za.co.absa.balta.classes.DBConnection
-import za.co.absa.ultet.dbitems.extractors.DBTableFromPG
-import za.co.absa.ultet.dbitems.{DBFunction, DBFunctionFromPG, DBItem, DBTable}
 import za.co.absa.ultet.implicits.SetImplicits.DBItemSetEnhancement
-import za.co.absa.ultet.parsers.{PgFunctionFileParser, PgTableFileParser}
-import za.co.absa.ultet.util.{DatabaseDefs, FileReader, SqlEntriesPerTransaction, TaskConfig}
+import za.co.absa.ultet.model.function.{FunctionFromPG, FunctionHeader}
+import za.co.absa.ultet.model.schema.SchemaDef
+import za.co.absa.ultet.model.table.TableDef
+import za.co.absa.ultet.types.DatabaseName
+import za.co.absa.ultet.types.complex.{DatabaseDefs, SqlEntriesPerTransaction}
+import za.co.absa.ultet.types.schema.SchemaName
+import za.co.absa.ultet.util.{FileReader, TaskConfig}
 import za.co.absa.ultet.util.FileReader.SchemaFiles
 import za.co.absa.ultet.util.SourceFileType.{FunctionSrc, SchemaOwner, TableSrc}
+import za.co.absa.ultet.util.extractors.DBTableFromPG
+import za.co.absa.ultet.util.parsers.{PgFunctionFileParser, PgTableFileParser}
 
 import java.net.URI
 
@@ -82,14 +87,14 @@ case class DBAppModel(databases: DatabaseDefs) {
     val tableExtractor = DBTableFromPG(dbDef.databaseName)
     val newSchemas = dbDef.schemas.foldLeft(dbDef.schemas) {
       case (acc, (schemaName, schemaDef)) =>
-        val functionsInDatabase: Seq[DBFunction] =
-          DBFunctionFromPG.fetchAllOfSchema(dbDef.databaseName, schemaName)(dbConnection.connection) //TODO  #33 Get Postgres fucntions based on list of names
+        val functionsInDatabase: Seq[FunctionHeader] =
+          FunctionFromPG.fetchAllOfSchema(dbDef.databaseName, schemaName)(dbConnection.connection) //TODO  #33 Get Postgres functions based on list of names
         val tablesInDatabase = schemaDef
           .tablesFromSource
           .values.flatMap(table => tableExtractor.extract(schemaName, table.tableName))
           .map(table => table.tableName -> table)
           .toMap
-        val newSchemaDef = SchemaDef(schemaName, functionsInDatabase.toSet, Map.empty, tablesInDatabase)
+        val newSchemaDef = SchemaDef(schemaName, ownerNameX = None, functionsInDatabase.toSet, Map.empty, tablesInDatabase) //TODO #30 Schema owner support
         acc + (schemaName -> newSchemaDef)
     }
     DatabaseDef(dbDef.databaseName, newSchemas, createDatabase = false)
@@ -107,7 +112,7 @@ object DBAppModel {
     }
   }
 
-  def fromDBFunctions[T <: DBFunction](functions: Seq[T]): DBAppModel = {
+  def fromDBFunctions[T <: FunctionHeader](functions: Seq[T]): DBAppModel = {
     val databases = functions.groupBy(_.database)
 
     val databaseDefs = databases.map {
@@ -115,7 +120,7 @@ object DBAppModel {
         val schemas = dbFunctions.groupBy(_.schema)
         val schemaDefs = schemas.map {
           case (schemaName, schemaFunctions) =>
-            val schemaDef = SchemaDef(schemaName, schemaFunctions.toSet, Map.empty, Map.empty)
+            val schemaDef = schema.SchemaDef(schemaName, ownerNameX = None,schemaFunctions.toSet, Map.empty, Map.empty) //TODO #30 Schema owner support
             schemaName -> schemaDef
         }
         dbName -> DatabaseDef(dbName, schemaDefs, createDatabase = false)
@@ -124,7 +129,7 @@ object DBAppModel {
     DBAppModel(databaseDefs)
   }
 
-  private def fromTableDefs(tables: Set[DBTable]): DBAppModel = {
+  private def fromTableDefs(tables: Set[TableDef]): DBAppModel = {
     val tablesByDB = tables.groupBy(_.primaryDBName)
 
     val databaseDefs = tablesByDB.map {
@@ -132,7 +137,7 @@ object DBAppModel {
         val schemaDef = dbTables.groupBy(_.schemaName).map {
           case (schemaName, schemaTables) =>
             val schemaTablesMap = schemaTables.map(table => table.tableName -> table).toMap
-            val schemaDef = SchemaDef(schemaName, Set.empty, schemaTablesMap, Map.empty)
+            val schemaDef = SchemaDef(schemaName, ownerNameX = None , Set.empty, schemaTablesMap, Map.empty) //TODO #30 Schema owner support
             schemaName -> schemaDef
         }
         dbName -> DatabaseDef(dbName, schemaDef, createDatabase = false)

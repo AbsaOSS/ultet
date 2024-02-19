@@ -14,19 +14,20 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.implicits
+package za.co.absa.ultet.util.parsers
 
-import za.co.absa.ultet.model.DBItem
-import za.co.absa.ultet.types.complex.SqlEntriesPerTransaction
+import za.co.absa.ultet.types.user.UserName
 
-object SetImplicits {
+import java.net.URI
+import java.nio.file.{Files, Paths}
+import java.util.stream.Collectors
 
-  implicit class DBItemSetEnhancement(val dbItems: Set[DBItem]) extends AnyVal {
-    def toSortedGroupedSqlEntries: SqlEntriesPerTransaction = {
-      val sqlEntries = dbItems.toSeq.flatMap(_.sqlEntries)
-      sqlEntries
-        .groupBy(_.transactionGroup)
-        .mapValues(_.sortBy(_.orderInTransaction))
-    }  }
+object SchemaUserParser {
+  def parseTxtFileContainingSchemaOwner(fileUri: URI): UserName = {
+    val path = Paths.get(fileUri)
+    val lines = Files.lines(path)
+    val content = lines.collect(Collectors.joining("\n"))
 
+    UserName(content.trim)
+  }
 }

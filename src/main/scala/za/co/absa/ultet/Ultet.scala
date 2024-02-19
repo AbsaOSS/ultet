@@ -19,15 +19,15 @@ package za.co.absa.ultet
 import com.typesafe.scalalogging.Logger
 import scopt.OParser
 import za.co.absa.balta.classes.DBConnection
-import za.co.absa.ultet.dbitems.DBItem
 import za.co.absa.ultet.implicits.MapImplicits.SqlEntriesPerTransactionEnhancement
 import za.co.absa.ultet.implicits.OptionImplicits.OptionEnhancements
-import za.co.absa.ultet.model.{DBAppModel, DatabaseName, SQLEntry, TransactionGroup}
+import za.co.absa.ultet.model.DBAppModel
+import za.co.absa.ultet.sql.{SqlExecutor, TransactionGroup}
+import za.co.absa.ultet.types.DatabaseName
+import za.co.absa.ultet.types.complex.SqlsPerTransaction
 import za.co.absa.ultet.util.FileReader.SchemaFiles
-import za.co.absa.ultet.util.{CliParser, Config, DBProperties, FileReader, SqlEntriesPerTransaction, SqlExecutor, SqlsPerTransaction, TaskConfig}
-
-import java.sql.{Connection, DriverManager, ResultSet}
-import scala.util.{Failure, Success, Try}
+import za.co.absa.ultet.util.parsers.CliParser
+import za.co.absa.ultet.util.{Config, DBProperties, FileReader, TaskConfig}
 
 object Ultet {
   private val logger = Logger(getClass.getName)

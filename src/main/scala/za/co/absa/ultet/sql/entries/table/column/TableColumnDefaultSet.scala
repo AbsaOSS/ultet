@@ -14,19 +14,16 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.implicits
+package za.co.absa.ultet.sql.entries.table.column
 
-import za.co.absa.ultet.model.DBItem
-import za.co.absa.ultet.types.complex.SqlEntriesPerTransaction
+import za.co.absa.ultet.sql.entries.table.TableAlteration
+import za.co.absa.ultet.types.table.{ColumnName, TableIdentifier}
 
-object SetImplicits {
+case class TableColumnDefaultSet(tableIdentifier: TableIdentifier, columnName: ColumnName, default: String) extends TableAlteration {
+  override def sqlExpression: String = {
+    s"""ALTER TABLE ${tableIdentifier.fullName}
+       |ALTER COLUMN ${columnName.normalized} SET DEFAULT $default;""".stripMargin
+  }
 
-  implicit class DBItemSetEnhancement(val dbItems: Set[DBItem]) extends AnyVal {
-    def toSortedGroupedSqlEntries: SqlEntriesPerTransaction = {
-      val sqlEntries = dbItems.toSeq.flatMap(_.sqlEntries)
-      sqlEntries
-        .groupBy(_.transactionGroup)
-        .mapValues(_.sortBy(_.orderInTransaction))
-    }  }
-
+  override def orderInTransaction: Int = 250
 }
