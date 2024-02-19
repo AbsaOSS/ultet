@@ -97,7 +97,7 @@ case class SchemaDef(
 
 object SchemaDef {
 
-  val DO_NOT_TOUCH: Seq[String] = Seq("pg_toast", "pg_catalog", "information_schema")
-  val DO_NOT_CHOWN: Seq[String] = Seq("public")
+  val DO_NOT_TOUCH: Seq[String] = Seq("pg_toast", "pg_catalog", "information_schema") // some schemas (system ones) are not to be touched
+  val DO_NOT_CHOWN: Seq[String] = Seq("public") // some schemas should not change their owner
 
 }
