@@ -151,7 +151,7 @@ object TableDef {
     private def generateAlterForDefaultChange(thisCol: TableColumn, otherCol: TableColumn): Seq[TableAlteration] = {
       (thisCol.default, otherCol.default) match {
         case (t, o) if t == o => Seq.empty // no change
-        case (Some(t), None) => Seq(TableColumnDefaultDrop(tableIdentifier, thisCol.columnName))
+        case (Some(_), None) => Seq(TableColumnDefaultDrop(tableIdentifier, thisCol.columnName))
         case (_, Some(o)) => Seq(TableColumnDefaultSet(tableIdentifier, otherCol.columnName, o)) // both add/set
       }
     }
