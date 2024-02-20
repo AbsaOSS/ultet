@@ -19,7 +19,7 @@ package za.co.absa.ultet.model.table
 import za.co.absa.ultet.model.DBItem
 import za.co.absa.ultet.model.table.TableDef.ColumnsDifferenceResolver
 import za.co.absa.ultet.sql.entries.SQLEntry
-import za.co.absa.ultet.sql.entries.table.TableAlteration
+import za.co.absa.ultet.sql.entries.table.{TableAlteration, TableDescriptionSet}
 import za.co.absa.ultet.sql.entries.table.index.{TableIndexCreation, TableIndexDrop, TablePrimaryKeyAdd, TablePrimaryKeyDrop}
 
 case class TableAlter(newTable: TableDef, origTable: TableDef) extends DBItem {
@@ -33,6 +33,12 @@ case class TableAlter(newTable: TableDef, origTable: TableDef) extends DBItem {
 
     val addIndices = origTable.indexes.diff(origTable.indexes)
     val alterationsToAddIndices = addIndices.map(idx => TableIndexCreation(newTable.tableIdentifier, idx))
+
+    val description = if (origTable.description != newTable.description) {
+      Seq(TableDescriptionSet(newTable.tableIdentifier, newTable.description))
+    } else {
+      Seq.empty
+    }
 
     val pkEntries: Seq[TableAlteration] = (origTable.primaryKey, origTable.primaryKey) match {
       case (x, y) if x == y => Seq.empty
@@ -53,6 +59,7 @@ case class TableAlter(newTable: TableDef, origTable: TableDef) extends DBItem {
       alterationsToRemoveIndices ++
       diffResolver.alterationsForColumnRemovals ++
       pkEntries ++
-      alterationsToAddIndices
+      alterationsToAddIndices ++
+      description
   }
 }
