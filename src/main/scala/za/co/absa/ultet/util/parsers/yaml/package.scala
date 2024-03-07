@@ -16,14 +16,10 @@
 
 package za.co.absa.ultet.util.parsers
 
-import za.co.absa.ultet.model.table.TableDef
-import za.co.absa.ultet.types.schema.SchemaName
-import za.co.absa.ultet.util.parsers.yaml.DBTableFromYaml
+import io.circe.generic.extras.Configuration
 
-case class PgTableFileParser(schemaName: SchemaName) extends GenericFileParser[TableDef] {
-  override def parseSource(source: String): Set[TableDef] = {
-    val processedYaml = DBTableFromYaml.fromYamlSource(source)
-    Set(processedYaml.convertToDBTable(schemaName))
-  }
-
+package object yaml {
+  implicit val ParsingConfig: Configuration = Configuration.default
+    .withSnakeCaseMemberNames
+    .withDefaults
 }

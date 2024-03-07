@@ -24,29 +24,3 @@ import java.net.URI
 trait DBItem {
   def sqlEntries: Seq[SQLEntry]
 }
-
-object DBItem {
-
-  private case class SchemasWithFilesGroupedByType(
-                                                    tables: Map[SchemaName, Seq[URI]],
-                                                    functions: Map[SchemaName, Seq[URI]],
-                                                    owners: Map[SchemaName, URI]
-                                                  )
-
-  private def groupAllFilesPerSchemaByType(all: Map[SchemaName, Seq[URI]]): SchemasWithFilesGroupedByType = {
-    val tableFiles = all.mapValues(_.filter(_.getPath.endsWith(".yml")))
-    val functionFiles = all.mapValues(_.filter(_.getPath.endsWith(".sql")))
-    val ownerFiles = all.mapValues(_.filter(_.getPath.endsWith(".txt")))
-    ownerFiles.foreach { case (schemaName, uris) =>
-      if (uris.size > 1) throw new IllegalArgumentException(
-        s"Detected more than one .txt file in schema ${schemaName.normalized}"
-      ) else if (uris.isEmpty) throw new IllegalArgumentException(
-        s".txt file in schema ${schemaName.normalized} not found"
-      )
-    }
-    val ownerFilePerSchema = ownerFiles.mapValues(_.head)
-
-    SchemasWithFilesGroupedByType(tableFiles, functionFiles, ownerFilePerSchema)
-  }
-
-}
