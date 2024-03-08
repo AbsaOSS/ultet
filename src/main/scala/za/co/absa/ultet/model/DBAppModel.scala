@@ -22,8 +22,9 @@ import za.co.absa.ultet.model.function.{FunctionFromPG, FunctionHeader}
 import za.co.absa.ultet.model.schema.SchemaDef
 import za.co.absa.ultet.model.table.TableDef
 import za.co.absa.ultet.types.DatabaseName
-import za.co.absa.ultet.types.complex.{DatabaseDefs, SqlEntriesPerTransaction}
+import za.co.absa.ultet.types.complex.{DatabaseDefs, SchemaOwners, SqlEntriesPerTransaction}
 import za.co.absa.ultet.types.schema.SchemaName
+import za.co.absa.ultet.types.user.UserName
 import za.co.absa.ultet.util.{FileReader, TaskConfig}
 import za.co.absa.ultet.util.FileReader.SchemaFiles
 import za.co.absa.ultet.util.SourceFileType.{FunctionSrc, SchemaOwner, TableSrc}
@@ -32,24 +33,45 @@ import za.co.absa.ultet.util.parsers.{PgFunctionFileParser, PgTableFileParser}
 
 import java.net.URI
 
-case class DBAppModel(databases: DatabaseDefs) {
+case class DBAppModel private[model](databases: DatabaseDefs, schemaOwners: SchemaOwners) {
 
   def +(other: Option[DBAppModel]): DBAppModel = {
     other.fold(this)(this + _)
   }
 
   def +(other: DBAppModel): DBAppModel = {
-    val newDatabases = other.databases.foldLeft(databases) {
+
+    def assignNewSchemaOwners(toModel: DBAppModel, schemas: Set[SchemaName], schemaOwnersToApply: SchemaOwners): DBAppModel = {
+      schemas.foldLeft(toModel) {
+        case (acc, schemaName) =>
+          acc.addSchemaOwner(schemaName, schemaOwnersToApply(schemaName))
+      }
+    }
+    // merge owners
+    val thisSchemasWithOwners = schemaOwners.keys.toSet
+    val otherSchemasWithOwners = other.schemaOwners.keys.toSet
+
+    val thisWithNewOwners = assignNewSchemaOwners(this, otherSchemasWithOwners.diff(thisSchemasWithOwners), other.schemaOwners)
+    val otherWithNewOwners = assignNewSchemaOwners(other, thisSchemasWithOwners.diff(otherSchemasWithOwners), schemaOwners)
+
+    val mergedSchemaOwners = other.schemaOwners ++ schemaOwners
+
+    // merge databases
+    val newDatabases = otherWithNewOwners.databases.foldLeft(thisWithNewOwners.databases) {
       case (acc, (dbName, dbDef)) =>
         val newDbDef = dbDef + acc.get(dbName)
         acc + (dbName -> newDbDef)
     }
-    DBAppModel(newDatabases)
+
+    DBAppModel(newDatabases, mergedSchemaOwners)
   }
 
   def addFunctionSource(schemaName: SchemaName, functionSource: String): DBAppModel = {
     val functions = PgFunctionFileParser.parseSource(functionSource)
-    val newDBAppModel = DBAppModel.fromDBFunctions(functions.toSeq) //we need to use Seq instead of Set because Seq allows covariance while Set only invariance
+    val newDBAppModel = DBAppModel.fromDBFunctions(
+      functions.toSeq, //we need to use Seq instead of Set because Seq allows covariance while Set only invariance
+      schemaOwners
+    )
     //TODO #31 Add warnings to the system - check if the function belong to the provided schema
 
     this + newDBAppModel
@@ -57,14 +79,33 @@ case class DBAppModel(databases: DatabaseDefs) {
 
   def addTableSource(schemaName: SchemaName, tableSource: String): DBAppModel = {
     val tables = PgTableFileParser(schemaName).parseSource(tableSource)
-    val newDBAppModel = DBAppModel.fromTableDefs(tables)
+    val newDBAppModel = DBAppModel.fromTableDefs(tables, schemaOwners)
     this + newDBAppModel
+  }
+
+  def addSchemaOwner(schemaName: SchemaName, ownerName: UserName): DBAppModel = {
+    if (schemaOwners.contains(schemaName)) {
+      //TODO #31 Add warnings to the system - warn if owner already exists and differ
+      this
+    } else {
+      val newDatabases = databases.foldLeft(databases) {
+        case (acc, (dbName, dbDef)) =>
+          if (dbDef.schemas.contains(schemaName)) {
+            val newDbDef = dbDef.copy(schemas = dbDef.schemas + (schemaName -> dbDef.schemas(schemaName).copy(ownerName = Some(ownerName))))
+            acc + (dbName -> newDbDef)
+          } else {
+            acc
+          }
+      }
+      val newSchemaOwners = schemaOwners + (schemaName -> ownerName)
+      DBAppModel(newDatabases, newSchemaOwners)
+    }
   }
 
   def addDatabasesAnalysis()(implicit taskConfig: TaskConfig): DBAppModel = {
     val newDatabases = databases.foldLeft(this.databases) {
       case (acc, (dbName, dbDef)) =>
-        val newDbDef = analyzeDatabase(dbDef)
+        val newDbDef = analyzeDatabase(dbDef, schemaOwners)
         acc + (dbName -> (dbDef + newDbDef))
     }
     copy(databases = newDatabases)
@@ -82,7 +123,7 @@ case class DBAppModel(databases: DatabaseDefs) {
   }
 
 
-  private def analyzeDatabase(dbDef: DatabaseDef)(implicit taskConfig: TaskConfig): DatabaseDef = {
+  private def analyzeDatabase(dbDef: DatabaseDef, schemaOwners: SchemaOwners)(implicit taskConfig: TaskConfig): DatabaseDef = {
     implicit val dbConnection: DBConnection = taskConfig.dbConnections(dbDef.databaseName).dbConnection
     val tableExtractor = DBTableFromPG(dbDef.databaseName)
     val newSchemas = dbDef.schemas.foldLeft(dbDef.schemas) {
@@ -94,7 +135,8 @@ case class DBAppModel(databases: DatabaseDefs) {
           .values.flatMap(table => tableExtractor.extract(schemaName, table.tableName))
           .map(table => table.tableName -> table)
           .toMap
-        val newSchemaDef = SchemaDef(schemaName, ownerNameX = None, functionsInDatabase.toSet, Map.empty, tablesInDatabase) //TODO #30 Schema owner support
+        val schemaOwner = schemaOwners.get(schemaName)
+        val newSchemaDef = SchemaDef(schemaName, schemaOwner, functionsInDatabase.toSet, Map.empty, tablesInDatabase)
         acc + (schemaName -> newSchemaDef)
     }
     DatabaseDef(dbDef.databaseName, newSchemas, createDatabase = false)
@@ -112,7 +154,7 @@ object DBAppModel {
     }
   }
 
-  def fromDBFunctions[T <: FunctionHeader](functions: Seq[T]): DBAppModel = {
+  def fromDBFunctions[T <: FunctionHeader](functions: Seq[T], schemaOwners: SchemaOwners): DBAppModel = {
     val databases = functions.groupBy(_.database)
 
     val databaseDefs = databases.map {
@@ -120,16 +162,17 @@ object DBAppModel {
         val schemas = dbFunctions.groupBy(_.schema)
         val schemaDefs = schemas.map {
           case (schemaName, schemaFunctions) =>
-            val schemaDef = schema.SchemaDef(schemaName, ownerNameX = None,schemaFunctions.toSet, Map.empty, Map.empty) //TODO #30 Schema owner support
+            val schemaOwner = schemaOwners.get(schemaName)
+            val schemaDef = schema.SchemaDef(schemaName, schemaOwner,schemaFunctions.toSet, Map.empty, Map.empty)
             schemaName -> schemaDef
         }
         dbName -> DatabaseDef(dbName, schemaDefs, createDatabase = false)
     }
 
-    DBAppModel(databaseDefs)
+    DBAppModel(databaseDefs, schemaOwners)
   }
 
-  private def fromTableDefs(tables: Set[TableDef]): DBAppModel = {
+  private def fromTableDefs(tables: Set[TableDef], schemaOwners: SchemaOwners): DBAppModel = {
     val tablesByDB = tables.groupBy(_.primaryDBName)
 
     val databaseDefs = tablesByDB.map {
@@ -137,13 +180,14 @@ object DBAppModel {
         val schemaDef = dbTables.groupBy(_.schemaName).map {
           case (schemaName, schemaTables) =>
             val schemaTablesMap = schemaTables.map(table => table.tableName -> table).toMap
-            val schemaDef = SchemaDef(schemaName, ownerNameX = None , Set.empty, schemaTablesMap, Map.empty) //TODO #30 Schema owner support
+            val schemaOwner = schemaOwners.get(schemaName)
+            val schemaDef = SchemaDef(schemaName, schemaOwner , Set.empty, schemaTablesMap, Map.empty)
             schemaName -> schemaDef
         }
         dbName -> DatabaseDef(dbName, schemaDef, createDatabase = false)
     }
 
-    DBAppModel(databaseDefs)
+    DBAppModel(databaseDefs, schemaOwners)
   }
 
   private def loadSchemaFiles(schemaName: SchemaName, files: Set[URI]): DBAppModel = {
@@ -152,11 +196,11 @@ object DBAppModel {
         FileReader.fileType(file) match {
           case TableSrc    => acc.addTableSource(schemaName, FileReader.readFileAsString(file))
           case FunctionSrc => acc.addFunctionSource(schemaName, FileReader.readFileAsString(file))
-          case SchemaOwner => acc // TODO #30 Schema owner support
-          case _           => acc
+          case SchemaOwner => acc.addSchemaOwner(schemaName, UserName(FileReader.readFileAsString(file, trim = true)))
+          case _           => acc //TODO #31 Add warnings to the system - unrecognized file
         }
     }
   }
 
-  private val emptyDBAppModel = DBAppModel(Map.empty[DatabaseName, DatabaseDef])
+  private val emptyDBAppModel = DBAppModel(Map.empty[DatabaseName, DatabaseDef], Map.empty[SchemaName, UserName])
 }
