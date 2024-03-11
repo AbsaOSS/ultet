@@ -18,24 +18,23 @@ description: This is an example table
 primary_db: example_db
 owner: some_owner_user
 columns:
-  - columnName: id_key_field
-    type: bigint
+  - column_name: id_key_field
+    data_type: bigint
     not_null: true
-    description: Skype username
-    default: `SQL expression`
-  - columnName: some_name
-    type: text
+    description: Key field
+    default: "SQL expression"
+  - column_name: some_name
+    data_type: text
     not_null: false
     description: Aggregation name
-  - columnName: item_tags
-    type: text[]
+  - column_name: item_tags
+    data_type: text[]
     not_null: true
     description: Array of values
-#    source: `SQL expression how to fill the column if newly created; not in scope yet`
 primary_key:
   name: pk_my_table
   columns: [id_key_field]
 indexes:
-  - indexName: idx_some_name
-    tableName: testTable
-    indexBy: [column1]
+  - index_name: idx_some_name
+    index_by: [column1]
+    is_unique: false

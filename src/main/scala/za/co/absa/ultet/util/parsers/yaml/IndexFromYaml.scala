@@ -14,16 +14,10 @@
  * limitations under the License.
  */
 
-package za.co.absa.ultet.util.parsers
+package za.co.absa.ultet.util.parsers.yaml
 
-import za.co.absa.ultet.model.table.TableDef
-import za.co.absa.ultet.types.schema.SchemaName
-import za.co.absa.ultet.util.parsers.yaml.DBTableFromYaml
+import za.co.absa.ultet.model.table.index.TableIndex.IndexColumn
 
-case class PgTableFileParser(schemaName: SchemaName) extends GenericFileParser[TableDef] {
-  override def parseSource(source: String): Set[TableDef] = {
-    val processedYaml = DBTableFromYaml.fromYamlSource(source)
-    Set(processedYaml.convertToDBTable(schemaName))
-  }
-
+trait IndexFromYaml {
+  protected def toIndexColumns(columnNames: Seq[String]): Seq[IndexColumn] = columnNames.map(IndexColumn(_))
 }

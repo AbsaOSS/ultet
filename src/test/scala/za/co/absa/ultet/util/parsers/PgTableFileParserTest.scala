@@ -25,72 +25,28 @@ import za.co.absa.ultet.types.DatabaseName
 import za.co.absa.ultet.types.schema.SchemaName
 import za.co.absa.ultet.types.table.{ColumnName, IndexName, TableIdentifier, TableName}
 import za.co.absa.ultet.types.user.UserName
-import za.co.absa.ultet.util.parsers.helpers.DBTableFromYaml
 
 class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 
   private val schemaName = SchemaName("testSchema")
 
-  "PgTableFileParserTest" should "return semi-prepared object table from example content" in {
-    val tableString =
-      """table: testTable
-        |description: Some Description of this madness
-        |primaryDBName: primaryDB
-        |owner: some_owner_user
-        |columns:
-        |  - columnName: column1
-        |    dataType: bigint
-        |    notNull: "true"
-        |primaryKey:
-        |    name: pk_my_table
-        |    columns: "[id_key_field1, id_key_field1]"
-        |indexes:
-        |  - indexName: idx_some_name
-        |    tableName: testTable
-        |    indexBy: "[column1]"
-        |""".stripMargin
-
-    PgTableFileParser(schemaName).processYaml(tableString) shouldBe DBTableFromYaml(
-      table = "testTable",
-      description = Some("Some Description of this madness"),
-      primaryDBName = "primaryDB",
-      owner = "some_owner_user",
-      columns = Seq(
-        Map(
-          "columnName" -> "column1",
-          "dataType" -> "bigint",
-          "notNull" -> "true"  // TODO, horrible! Must be string in the YAML file!
-        ),
-      ),
-      primaryKey = Some(Map(
-        "name" -> "pk_my_table",
-        "columns" -> "[id_key_field1, id_key_field1]"  // TODO, horrible! Must be string in the YAML file!
-      )),
-      indexes = Seq(Map(
-        "indexName" -> "idx_some_name",
-        "tableName" -> "testTable",
-        "indexBy" -> "[column1]"  // TODO, horrible! Must be string in the YAML file!
-      ))
-    )
-  }
 
   "PgTableFileParserTest" should "return well-prepared table object from example content" in {
     val tableString =
       """table: testTable
         |description: Some Description of this madness
-        |primaryDBName: primaryDB
+        |primary_db: primaryDB
         |owner: some_owner_user
         |columns:
-        |  - columnName: column1
-        |    dataType: bigint
-        |    notNull: "true"
-        |primaryKey:
+        |  - column_name: column1
+        |    data_type: bigint
+        |    not_null: true
+        |primary_key:
         |    name: pk_my_table
-        |    columns: "[id_key_field1, id_key_field1]"
+        |    columns: [id_key_field1, id_key_field1]
         |indexes:
-        |  - indexName: idx_some_name
-        |    tableName: testTable
-        |    indexBy: "[column1]"
+        |  - index_name: idx_some_name
+        |    index_by: [column1]
         |""".stripMargin
 
     PgTableFileParser(schemaName).parseSource(tableString).head shouldBe TableDef(
@@ -119,33 +75,14 @@ class PgTableFileParserTest extends AnyFlatSpec with Matchers {
     )
   }
 
-  "PgTableFileParserTest" should "return semi-prepared object table from example content, some attributes empty" in {
-    val tableString =
-      """table: testTable
-        |description: Some Description of this madness
-        |primaryDBName: primaryDB
-        |owner: some_owner_user
-        |columns: []
-        |primaryKey:
-        |indexes: []
-        |""".stripMargin
-
-    PgTableFileParser(schemaName).processYaml(tableString) shouldBe DBTableFromYaml(
-      table = "testTable",
-      description = Some("Some Description of this madness"),
-      primaryDBName = "primaryDB",
-      owner = "some_owner_user",
-    )
-  }
-
   "PgTableFileParserTest" should "return well-prepared object table from example content, some attributes empty" in {
     val tableString =
       """table: testTable
         |description: Some Description of this madness
-        |primaryDBName: primaryDB
+        |primary_db: primaryDB
         |owner: some_owner_user
         |columns: []
-        |primaryKey:
+        |primary_key:
         |indexes: []
         |""".stripMargin
 
