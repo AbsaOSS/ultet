@@ -25,7 +25,6 @@ import za.co.absa.ultet.types.DatabaseName
 import za.co.absa.ultet.types.schema.SchemaName
 import za.co.absa.ultet.types.table.{ColumnName, IndexName, TableIdentifier, TableName}
 import za.co.absa.ultet.types.user.UserName
-import za.co.absa.ultet.util.parsers.yaml.DBTableFromYaml
 
 class PgTableFileParserTest extends AnyFlatSpec with Matchers {
 

@@ -16,7 +16,7 @@
 
 package za.co.absa.ultet.util.parsers.yaml
 
-import io.circe.generic.extras.{Configuration, ConfiguredJsonCodec}
+import io.circe.generic.extras.ConfiguredJsonCodec
 import za.co.absa.ultet.model.table.index.TableIndex.PrimaryKey
 import za.co.absa.ultet.types.table.{IndexName, TableIdentifier}
 

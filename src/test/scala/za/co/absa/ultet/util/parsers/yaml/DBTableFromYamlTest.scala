@@ -22,8 +22,6 @@ import za.co.absa.ultet.types.schema.SchemaName
 
 class DBTableFromYamlTest extends AnyFlatSpec with Matchers {
 
-  private val schemaName = SchemaName("testSchema")
-
   "PgTableFileParserTest" should "return parse yaml from example content" in {
     val tableString =
       """table: testTable
