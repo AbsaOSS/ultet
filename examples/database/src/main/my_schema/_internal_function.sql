@@ -15,9 +15,9 @@
  */
 
 -- owner: some_owner_user
--- database: example_db ( user_for_access )
+-- database: example_db ()
 CREATE OR REPLACE FUNCTION my_schema._internal_function(
-    IN  i_parameter         TEXT,
+    IN  i_parameter         DATE,
     OUT status              INTEGER,
     OUT status_text         TEXT
 ) RETURNS record AS

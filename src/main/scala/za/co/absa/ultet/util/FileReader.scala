@@ -28,11 +28,12 @@ object FileReader {
 
   type SchemaFiles = Map[SchemaName, Set[URI]]
 
-  def readFileAsString(fileUri: URI): String = {
+  def readFileAsString(fileUri: URI, trim: Boolean = false): String = {
     val path = Paths.get(fileUri)
 
     val lines = Files.lines(path)
-    lines.collect(Collectors.joining("\n"))
+    val result = lines.collect(Collectors.joining("\n"))
+    if (trim) result.trim else result
   }
 
   def listFileURIsPerSchema(pathString: String): SchemaFiles = {
@@ -48,9 +49,9 @@ object FileReader {
     val path = uri.getPath
     if (path.endsWith(".sql")) {
       SourceFileType.FunctionSrc
-    } else if (path.endsWith(".yml")) {
+    } else if (path.endsWith(".yml") || path.endsWith(".yaml")) {
       SourceFileType.TableSrc
-    } else if (path == "owner.txt") {
+    } else if (path.endsWith("/owner.txt")) {
       SourceFileType.SchemaOwner
     } else {
       SourceFileType.Unknown

@@ -23,6 +23,7 @@ import za.co.absa.ultet.sql.TransactionGroup
 import za.co.absa.ultet.sql.entries.SQLEntry
 import za.co.absa.ultet.types.schema.SchemaName
 import za.co.absa.ultet.types.table.TableName
+import za.co.absa.ultet.types.user.UserName
 
 package object complex {
 
@@ -35,5 +36,7 @@ package object complex {
   type SqlsPerTransaction = Map[TransactionGroup.Value, Seq[String]]
 
   type Tables = Map[TableName, TableDef]
+
+  type SchemaOwners = Map[SchemaName, UserName]
 
 }

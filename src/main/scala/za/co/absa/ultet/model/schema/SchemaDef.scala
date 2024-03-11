@@ -28,7 +28,7 @@ import za.co.absa.ultet.types.user.UserName
 
 case class SchemaDef(
                       name: SchemaName,
-                      ownerNameX: Option[UserName], //TODO #30 Schema owner support
+                      ownerName: Option[UserName],
                       functions: Set[FunctionHeader],
                       tablesFromSource: Tables,
                       tablesFromTarget: Tables
@@ -47,7 +47,7 @@ case class SchemaDef(
 //        SchemaGrant(name, users)
 //      )
     } else {
-      ownerNameX.map {
+      ownerName.map {
         SchemaOwnership(name, _)
       }.toSeq ++
         Seq(
@@ -63,7 +63,7 @@ case class SchemaDef(
   def +(other: SchemaDef): SchemaDef = {
     SchemaDef(
       name,
-      ownerNameX.orElse(other.ownerNameX),
+      ownerName.orElse(other.ownerName),
       functions ++ other.functions,
       tablesFromSource ++ other.tablesFromSource,
       tablesFromTarget ++ other.tablesFromTarget
