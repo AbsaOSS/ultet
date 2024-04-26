@@ -80,7 +80,7 @@ object PgFunctionFileParser extends GenericFileParser[FunctionFromSource] {
 
           case param => throw new IllegalStateException(s"Could not parameter from $param")
         }
-        (schema, fn, optParamTypes.flatten) // just keep the IN paramTypes
+        (schema, fn, optParamTypes.flatten.toList) // just keep the IN paramTypes and convert from array to list
       case _ => throw new IllegalStateException(s"Found more than 2 create function mentions in $sqlStr")
     }
   }
