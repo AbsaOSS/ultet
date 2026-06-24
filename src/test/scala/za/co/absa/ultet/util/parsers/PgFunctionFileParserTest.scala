@@ -72,6 +72,30 @@ class PgFunctionFileParserTest extends AnyFlatSpec with Matchers {
 
   }
 
+  it should "parse multi-word IN parameter type" in {
+    val functionString =
+      """/* comment here and there **/
+        |-- owner:
+        |     owner_user123
+        |-- database: eXample_db (   )
+        |CREATE or REPLACE FUNCTION my_schema1.public_functionX(
+        |    IN param_name TIMESTAMP WITH TIME ZONE
+        |) RETURNS record AS
+        |$$
+        |-------------------------------------------------------------------------------
+        |--""".stripMargin
+
+    PgFunctionFileParser.parseSource(functionString).head shouldBe FunctionFromSource(
+      fnName = FunctionName("public_functionX"),
+      paramTypes = Seq(FunctionArgumentType("TIMESTAMP WITH TIME ZONE")),
+      owner = UserName("owner_user123"),
+      users = Set.empty,
+      schema = SchemaName("my_schema1"),
+      database = DatabaseName("eXample_db"),
+      sqlBody = functionString
+    )
+  }
+
   it should "parse example function example file" in {
    val testFileUri = getClass.getClassLoader.getResource("public_function_example.sql").toURI
 
