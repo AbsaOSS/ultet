@@ -109,8 +109,8 @@ object PgFunctionFileParser extends GenericFileParser[FunctionFromSource] {
   // 7 - capturing-group #3 - parameters are matched there as a block - \s also covers line-breaks => parsed further later
 
 
-  private val singleParamCapturingRx = """(?i)\s*(IN|OUT)\s+(\w+)\s+(\w+)\s*""".r // used to break up params from ^^
-  //                              1--1   2------2   3---3   4---4
+  private val singleParamCapturingRx = """(?i)\s*(IN|OUT)\s+(\w+)\s+(.+)\s*""".r // used to break up params from ^^
+  //                              1--1   2------2   3--3 4---4
   // 1 - case insensitive matching
   // 2 - capturing-group #1 IN/OUT param
   // 3 - capturing-group #2 for param name
